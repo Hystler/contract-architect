@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum PartyRole {
+  CUSTOMER
+  CONTRACTOR
+}
+
+enum PartyType {
+  PHYSICAL
+  IP
+  OOO
+}
+
+enum DraftStatus {
+  DRAFT
+  GENERATED
+}
+
+enum DocumentTemplateType {
+  CONTRACT
+  ACT
+}
+
+enum GeneratedDocumentType {
+  CONTRACT
+  ACT
+  ZIP
+  PDF_PREVIEW
+}
+
+enum GeneratedDocumentFormat {
+  DOCX
+  ZIP
+  HTML
+  PDF
+}
+
+model DocumentDraft {
+  id                       String              @id @default(cuid())
+  contractNumber           String
+  contractDate             DateTime
+  city                     String
+  actNumber                String
+  actDate                  DateTime
+  customerName             String
+  customerType             PartyType
+  customerRepresentative   String?
+  customerBasis            String?
+  customerRequisites       String              @db.Text
+  contractorName           String
+  contractorType           PartyType
+  contractorRepresentative String?
+  contractorBasis          String?
+  contractorRequisites     String              @db.Text
+  subject                  String              @db.Text
+  worksDescription         String              @db.Text
+  works                    Json
+  totalAmount              Decimal             @db.Decimal(14, 2)
+  prepaymentPercent        Decimal?            @db.Decimal(5, 2)
+  prepaymentAmount         Decimal?            @db.Decimal(14, 2)
+  finalPaymentAmount       Decimal?            @db.Decimal(14, 2)
+  prepaymentDate           DateTime?
+  finalPaymentDate         DateTime?
+  startDate                DateTime?
+  endDate                  DateTime?
+  status                   DraftStatus         @default(DRAFT)
+  generatedDocuments       GeneratedDocument[]
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  @@index([contractNumber])
+  @@index([createdAt])
+}
+
+model Party {
+  id             String    @id @default(cuid())
+  role           PartyRole
+  type           PartyType
+  name           String
+  representative String?
+  basis          String?
+  requisites     String    @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([role, type])
+}
+
+model DocumentTemplate {
+  id        String               @id @default(cuid())
+  type      DocumentTemplateType
+  name      String
+  filePath  String
+  variables Json
+  isActive  Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([type, isActive])
+}
+
+model GeneratedDocument {
+  id        String                  @id @default(cuid())
+  draftId   String
+  draft     DocumentDraft           @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  type      GeneratedDocumentType
+  fileName  String
+  format    GeneratedDocumentFormat
+  createdAt DateTime                @default(now())
+
+  @@index([draftId])
+  @@index([type, createdAt])
+}
