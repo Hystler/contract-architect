@@ -16,12 +16,20 @@ export function GenerateActions({
   onSaveDraft
 }: GenerateActionsProps) {
   return (
-    <div className="rounded-md border border-white/10 bg-matte-900/85 p-4">
+    <div className="rounded-lg border border-legal-border bg-paper-50 p-4 shadow-paper">
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <Button disabled={isSaving || isGenerating} onClick={onSaveDraft} variant="secondary">
+        <Button
+          disabled={isSaving || isGenerating}
+          onClick={onSaveDraft}
+          variant="secondary"
+        >
           {isSaving ? "Сохранение..." : "Сохранить черновик"}
         </Button>
-        <Button disabled={isGenerating || isSaving} onClick={onPreview} variant="secondary">
+        <Button
+          disabled={isGenerating || isSaving}
+          onClick={onPreview}
+          variant="secondary"
+        >
           Открыть PDF-preview
         </Button>
         <Button disabled={isGenerating || isSaving} type="submit">

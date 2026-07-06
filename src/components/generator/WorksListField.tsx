@@ -27,10 +27,10 @@ export function WorksListField({
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-base font-semibold text-white">
+          <h3 className="text-base font-semibold text-graphite-950">
             Перечень работ
           </h3>
-          <p className="mt-1 text-sm text-steel-300">
+          <p className="mt-1 text-sm text-muted-500">
             Добавьте минимум одну работу для договора и акта.
           </p>
         </div>
@@ -45,18 +45,18 @@ export function WorksListField({
 
       <div className="mt-4 space-y-3">
         {fields.length === 0 ? (
-          <div className="rounded-md border border-white/10 bg-white/[0.035] p-4 text-sm text-steel-300">
+          <div className="rounded-md border border-legal-border bg-surface-100 p-4 text-sm text-muted-500">
             Список работ пуст. Добавьте работу, чтобы сформировать документы.
           </div>
         ) : null}
 
         {fields.map((field, index) => (
           <div
-            className="grid gap-3 rounded-md border border-white/10 bg-white/[0.035] p-3 sm:grid-cols-[1fr_auto]"
+            className="grid gap-3 rounded-md border border-legal-border bg-surface-100 p-3 sm:grid-cols-[1fr_auto]"
             key={field.id}
           >
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Работа {index + 1}
               </span>
               <Input

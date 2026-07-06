@@ -4,14 +4,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { AiAssistantPanel } from "@/components/ai/AiAssistantPanel";
 import { GenerateActions } from "@/components/generator/GenerateActions";
 import { PartyFields } from "@/components/generator/PartyFields";
 import { PaymentFields } from "@/components/generator/PaymentFields";
 import { PreviewPanel } from "@/components/generator/PreviewPanel";
+import { TemplateSelector } from "@/components/generator/TemplateSelector";
 import { WorksListField } from "@/components/generator/WorksListField";
 import { FieldError } from "@/components/ui/FieldError";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { buildContractTextFromValues } from "@/lib/ai/contractText";
 import {
   contractFormSchema,
   defaultContractValues
@@ -39,6 +42,12 @@ export function ContractForm() {
 
   const values = watch();
   const watchedValues = useMemo(() => values, [values]);
+  const assistantText = useMemo(
+    () => buildContractTextFromValues(watchedValues),
+    [watchedValues]
+  );
+  const defaultAiText =
+    watchedValues.worksDescription || watchedValues.subject || "";
 
   async function generateZip(data: ContractFormValues) {
     setIsGenerating(true);
@@ -120,15 +129,19 @@ export function ContractForm() {
 
   return (
     <form
-      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"
+      className="grid gap-6 xl:grid-cols-[230px_minmax(0,1fr)_380px]"
       onSubmit={handleSubmit(generateZip)}
     >
-      <div className="space-y-6">
-        <section className="rounded-md border border-white/10 bg-matte-900/70 p-5">
-          <h2 className="text-xl font-semibold text-white">Основные данные</h2>
+      <BuilderSteps />
+
+      <div className="order-1 space-y-6 xl:order-none">
+        <TemplateSelector />
+
+        <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
+          <h2 className="text-xl font-semibold">Основные данные</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Номер договора
               </span>
               <Input
@@ -140,7 +153,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата договора
               </span>
               <Input
@@ -152,7 +165,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">Город</span>
+              <span className="mb-2 block text-sm font-medium text-muted-500">Город</span>
               <Input
                 isInvalid={Boolean(errors.city)}
                 placeholder="Москва"
@@ -162,7 +175,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Номер акта
               </span>
               <Input
@@ -174,7 +187,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата акта
               </span>
               <Input
@@ -201,11 +214,11 @@ export function ContractForm() {
           title="Исполнитель"
         />
 
-        <section className="rounded-md border border-white/10 bg-matte-900/70 p-5">
-          <h2 className="text-xl font-semibold text-white">Предмет договора</h2>
+        <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
+          <h2 className="text-xl font-semibold">Предмет договора</h2>
           <div className="mt-5 space-y-4">
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Предмет договора
               </span>
               <Input
@@ -217,7 +230,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Описание работ
               </span>
               <Textarea
@@ -244,11 +257,11 @@ export function ContractForm() {
           values={watchedValues}
         />
 
-        <section className="rounded-md border border-white/10 bg-matte-900/70 p-5">
-          <h2 className="text-xl font-semibold text-white">Сроки</h2>
+        <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
+          <h2 className="text-xl font-semibold">Сроки</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата начала работ
               </span>
               <Input
@@ -260,7 +273,7 @@ export function ContractForm() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm text-steel-200">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата окончания работ
               </span>
               <Input
@@ -274,7 +287,7 @@ export function ContractForm() {
         </section>
 
         {formMessage ? (
-          <div className="rounded-md border border-white/10 bg-white/[0.045] p-4 text-sm text-steel-200">
+          <div className="rounded-md border border-gold-500/30 bg-gold-500/10 p-4 text-sm text-graphite-950">
             {formMessage}
           </div>
         ) : null}
@@ -287,7 +300,46 @@ export function ContractForm() {
         />
       </div>
 
-      <PreviewPanel values={watchedValues} />
+      <aside className="order-3 space-y-6 xl:sticky xl:top-6 xl:order-none xl:self-start">
+        <PreviewPanel values={watchedValues} />
+        <AiAssistantPanel
+          defaultSelectedText={defaultAiText}
+          fullText={assistantText}
+        />
+      </aside>
     </form>
+  );
+}
+
+function BuilderSteps() {
+  const steps = [
+    "Выбор шаблона",
+    "Данные сторон",
+    "Предмет и работы",
+    "Финансы и сроки",
+    "AI-проверка",
+    "Экспорт"
+  ];
+
+  return (
+    <aside className="order-2 rounded-lg border border-white/10 bg-white/[0.045] p-4 text-white xl:sticky xl:top-6 xl:order-none xl:self-start">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">
+        Сценарий
+      </p>
+      <ol className="mt-4 space-y-3">
+        {steps.map((step, index) => (
+          <li className="flex gap-3 text-sm leading-6" key={step}>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold-400/40 text-xs font-semibold text-gold-300">
+              {index + 1}
+            </span>
+            <span className="text-steel-200">{step}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-5 rounded-md border border-blue-300/20 bg-blue-300/10 p-3 text-xs leading-5 text-blue-100">
+        AI работает как слой подсказок. Документ формируется только из
+        выбранных шаблонов и данных формы.
+      </div>
+    </aside>
   );
 }

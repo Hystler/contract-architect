@@ -9,8 +9,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, isInvalid, ...props }, ref) => (
     <input
       className={cn(
-        "min-h-11 w-full rounded-md border bg-white/[0.055] px-3 py-2 text-sm text-white outline-none transition placeholder:text-steel-300/55 focus:border-brass-300/70 focus:ring-2 focus:ring-brass-300/15",
-        isInvalid ? "border-red-300/60" : "border-white/12",
+        "min-h-11 w-full rounded-md border bg-white px-3 py-2 text-sm text-graphite-950 outline-none transition placeholder:text-muted-500/70 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/15",
+        isInvalid ? "border-red-500/70" : "border-legal-border",
         className
       )}
       ref={ref}

@@ -40,9 +40,9 @@ export function PaymentFields({
   }
 
   return (
-    <section className="rounded-md border border-white/10 bg-matte-900/70 p-5">
+    <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-white">Финансы</h2>
+        <h2 className="text-xl font-semibold">Финансы</h2>
         <Button variant="secondary" onClick={recalculatePayment}>
           Пересчитать оплату
         </Button>
@@ -50,7 +50,7 @@ export function PaymentFields({
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">Общая сумма</span>
+          <span className="mb-2 block text-sm font-medium text-muted-500">Общая сумма</span>
           <Input
             isInvalid={Boolean(errors.totalAmount)}
             min={0}
@@ -63,7 +63,7 @@ export function PaymentFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             Предоплата в процентах
           </span>
           <Input
@@ -79,7 +79,7 @@ export function PaymentFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             Предоплата в рублях
           </span>
           <Input
@@ -94,7 +94,7 @@ export function PaymentFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             Остаток оплаты
           </span>
           <Input
@@ -109,7 +109,7 @@ export function PaymentFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             Дата предоплаты
           </span>
           <Input
@@ -121,7 +121,7 @@ export function PaymentFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             Дата финального платежа
           </span>
           <Input

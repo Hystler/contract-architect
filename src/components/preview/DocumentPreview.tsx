@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AiAssistantPanel } from "@/components/ai/AiAssistantPanel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
@@ -8,6 +9,7 @@ import {
   defaultContractValues
 } from "@/lib/validation/contractSchema";
 import { mapContractToTemplateData } from "@/lib/documents/templateDataMapper";
+import { buildContractTextFromTemplateData } from "@/lib/ai/contractText";
 import type { ContractFormValues, TemplateData } from "@/types/contract";
 
 const sampleData: ContractFormValues = {
@@ -54,28 +56,39 @@ export function DocumentPreview() {
 
   if (!templateData) {
     return (
-      <Card className="mx-auto max-w-5xl p-6 text-steel-200">
+      <Card className="mx-auto max-w-5xl p-6 text-graphite-950">
         Подготовка печатной версии...
       </Card>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      {isFallback ? (
-        <div className="no-print mb-5 rounded-md border border-brass-300/25 bg-brass-300/10 p-4 text-sm leading-6 text-brass-300">
-          Данные формы не найдены. Показан пример печатной версии.
+    <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div>
+        {isFallback ? (
+          <div className="no-print mb-5 rounded-md border border-gold-300/25 bg-gold-300/10 p-4 text-sm leading-6 text-gold-300">
+            Данные формы не найдены. Показан пример печатной версии.
+          </div>
+        ) : null}
+
+        <article className="print-document mx-auto min-h-[297mm] rounded-md border border-white/10 bg-[#fbfaf6] p-6 shadow-soft sm:p-10">
+          <ContractHtml data={templateData} />
+          <div className="print-page-break" />
+          <ActHtml data={templateData} />
+        </article>
+
+        <div className="no-print mt-6 flex justify-center">
+          <Button onClick={() => window.print()}>
+            Скачать / распечатать PDF
+          </Button>
         </div>
-      ) : null}
+      </div>
 
-      <article className="print-document mx-auto min-h-[297mm] rounded-md border border-white/10 bg-[#fbfaf6] p-6 shadow-soft sm:p-10">
-        <ContractHtml data={templateData} />
-        <div className="print-page-break" />
-        <ActHtml data={templateData} />
-      </article>
-
-      <div className="no-print mt-6 flex justify-center">
-        <Button onClick={() => window.print()}>Скачать / распечатать PDF</Button>
+      <div className="no-print lg:sticky lg:top-6 lg:self-start">
+        <AiAssistantPanel
+          defaultSelectedText={templateData.works_description}
+          fullText={buildContractTextFromTemplateData(templateData)}
+        />
       </div>
     </div>
   );

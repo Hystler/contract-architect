@@ -19,12 +19,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   primary:
-    "border border-brass-300/70 bg-brass-400 text-matte-950 hover:bg-brass-300",
+    "border border-gold-400 bg-gold-500 text-ink-950 hover:bg-gold-400",
   secondary:
-    "border border-white/12 bg-white/[0.06] text-white hover:bg-white/[0.1]",
-  ghost: "border border-transparent bg-transparent text-steel-200 hover:bg-white/[0.06]",
+    "border border-legal-border bg-paper-50 text-graphite-950 hover:border-gold-500 hover:bg-surface-100",
+  ghost:
+    "border border-transparent bg-transparent text-steel-200 hover:bg-white/[0.06]",
   danger:
-    "border border-red-300/30 bg-red-500/10 text-red-100 hover:bg-red-500/18"
+    "border border-red-300/40 bg-red-50 text-red-800 hover:bg-red-100"
 };
 
 const sizes = {
@@ -47,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const classNames = cn(
-      "inline-flex items-center justify-center rounded-md font-semibold transition focus:outline-none focus:ring-2 focus:ring-brass-300/60 disabled:cursor-not-allowed disabled:opacity-55",
+      "inline-flex cursor-pointer items-center justify-center rounded-md font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-gold-400/70 disabled:cursor-not-allowed disabled:opacity-55",
       variants[variant],
       sizes[size],
       className

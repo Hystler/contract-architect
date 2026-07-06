@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
+  --color-ink: #080a0f;
+  --color-graphite: #111827;
+  --color-surface: #f6f2ea;
+  --color-paper: #fffdf8;
+  --color-gold: #c6a15b;
+  --color-blue: #4f7cff;
+  --color-muted: #7a7f8a;
+  --color-border: #e4ded2;
 }
 
 * {
@@ -12,19 +20,15 @@
 
 html {
   min-height: 100%;
-  background: #0d0f12;
+  background: var(--color-ink);
 }
 
 body {
   min-height: 100%;
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 220px),
-    #0d0f12;
+  background: var(--color-ink);
   color: #eef1f5;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 button,
@@ -35,7 +39,18 @@ select {
 }
 
 ::selection {
-  background: rgba(200, 169, 106, 0.35);
+  background: rgba(198, 161, 91, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .print-document {

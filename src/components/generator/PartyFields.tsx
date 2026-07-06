@@ -50,11 +50,11 @@ export function PartyFields({
   const requisitesName = `${prefix}Requisites` as const;
 
   return (
-    <section className="rounded-md border border-white/10 bg-matte-900/70 p-5">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
+    <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
+      <h2 className="text-xl font-semibold">{title}</h2>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             {fieldLabels.type}
           </span>
           <Select isInvalid={Boolean(errors[typeName])} {...register(typeName)}>
@@ -66,7 +66,7 @@ export function PartyFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             {fieldLabels.name}
           </span>
           <Input
@@ -78,7 +78,7 @@ export function PartyFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             {fieldLabels.representative}
           </span>
           <Input
@@ -89,7 +89,7 @@ export function PartyFields({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             {fieldLabels.basis}
           </span>
           <Input
@@ -100,7 +100,7 @@ export function PartyFields({
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="mb-2 block text-sm text-steel-200">
+          <span className="mb-2 block text-sm font-medium text-muted-500">
             {fieldLabels.requisites}
           </span>
           <Textarea

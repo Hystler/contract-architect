@@ -9,9 +9,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        ink: {
+          950: "#080A0F"
+        },
+        graphite: {
+          950: "#111827",
+          900: "#171F2E",
+          800: "#253044"
+        },
+        surface: {
+          100: "#F6F2EA"
+        },
+        paper: {
+          50: "#FFFDF8"
+        },
+        gold: {
+          500: "#C6A15B",
+          400: "#D8BA75",
+          300: "#E8D49B"
+        },
+        intelligence: {
+          500: "#4F7CFF",
+          400: "#789BFF",
+          100: "#EAF0FF"
+        },
+        muted: {
+          500: "#7A7F8A"
+        },
+        legal: {
+          border: "#E4DED2"
+        },
         matte: {
-          950: "#0d0f12",
-          900: "#12151a",
+          950: "#080A0F",
+          900: "#111827",
           850: "#171b21",
           800: "#1e232b"
         },
@@ -25,7 +55,14 @@ const config: Config = {
         }
       },
       boxShadow: {
-        soft: "0 18px 60px rgba(0, 0, 0, 0.28)"
+        soft: "0 18px 60px rgba(0, 0, 0, 0.28)",
+        paper: "0 24px 80px rgba(8, 10, 15, 0.14)",
+        ai: "0 24px 80px rgba(79, 124, 255, 0.14)",
+        blue: "0 0 28px rgba(79, 124, 255, 0.55)"
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"]
       }
     }
   },
