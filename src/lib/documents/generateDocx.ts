@@ -4,10 +4,14 @@ import Docxtemplater from "docxtemplater";
 import JSZip from "jszip";
 import PizZip from "pizzip";
 import type { ContractFormValues } from "@/types/contract";
+import {
+  DocumentGenerationError,
+  TemplateNotFoundError
+} from "./documentErrors";
 import { mapContractToTemplateData } from "./templateDataMapper";
 import { sanitizeFileName } from "./sanitizeFileName";
 
-const templatesDirectory = path.join(process.cwd(), "src", "templates");
+const templatesDirectory = path.resolve(process.cwd(), "src", "templates");
 
 export async function generateDocumentsZip(data: ContractFormValues) {
   const templateData = mapContractToTemplateData(data);
@@ -37,22 +41,50 @@ async function renderDocxTemplate(
   data: Record<string, unknown>
 ) {
   const templatePath = path.join(templatesDirectory, templateFileName);
-  const content = await readFile(templatePath, "binary");
-  const zip = new PizZip(content);
+  const content = await readTemplateFile(templatePath);
 
-  const doc = new Docxtemplater(zip, {
-    delimiters: {
-      start: "{{",
-      end: "}}"
-    },
-    paragraphLoop: true,
-    linebreaks: true
-  });
+  try {
+    const zip = new PizZip(content);
+    const doc = new Docxtemplater(zip, {
+      delimiters: {
+        start: "{{",
+        end: "}}"
+      },
+      paragraphLoop: true,
+      linebreaks: true
+    });
 
-  doc.render(data);
+    doc.render(data);
 
-  return doc.getZip().generate({
-    type: "nodebuffer",
-    compression: "DEFLATE"
-  });
+    return doc.getZip().generate({
+      type: "nodebuffer",
+      compression: "DEFLATE"
+    });
+  } catch (error) {
+    if (error instanceof TemplateNotFoundError) {
+      throw error;
+    }
+
+    throw new DocumentGenerationError();
+  }
+}
+
+async function readTemplateFile(templatePath: string) {
+  try {
+    return await readFile(templatePath);
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      throw new TemplateNotFoundError();
+    }
+
+    throw new DocumentGenerationError();
+  }
+}
+
+function isNotFoundError(error: unknown) {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
 }

@@ -7,9 +7,15 @@ export const dynamic = "force-dynamic";
 
 export default async function GeneratorPage() {
   const user = getCurrentUserSession();
-  const premiumActive = user
-    ? await hasActiveSubscription(user.userId)
-    : false;
+  let premiumActive = false;
+
+  if (user) {
+    try {
+      premiumActive = await hasActiveSubscription(user.userId);
+    } catch {
+      premiumActive = false;
+    }
+  }
 
   return (
     <main className="min-h-screen bg-ink-950 px-4 py-5 sm:px-6 lg:px-8">

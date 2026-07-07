@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { jsonError } from "@/lib/api/errors";
 import {
   getPublicAiRuntimeStatus,
   updateAiRuntimeSettings
@@ -65,9 +66,6 @@ export async function POST(request: Request) {
       settings
     });
   } catch {
-    return NextResponse.json(
-      { message: "Не удалось сохранить настройки AI." },
-      { status: 500 }
-    );
+    return jsonError("Не удалось сохранить настройки AI.", 500);
   }
 }

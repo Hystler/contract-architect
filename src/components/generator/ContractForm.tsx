@@ -80,7 +80,9 @@ export function ContractForm({ authState }: ContractFormProps) {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.message || "Не удалось сформировать документы");
+        throw new Error(
+          error?.error || error?.message || "Не удалось сформировать документы"
+        );
       }
 
       const blob = await response.blob();
@@ -122,7 +124,9 @@ export function ContractForm({ authState }: ContractFormProps) {
 
         if (!response.ok) {
           const error = await response.json().catch(() => null);
-          throw new Error(error?.message || "Не удалось сохранить черновик");
+          throw new Error(
+            error?.error || error?.message || "Не удалось сохранить черновик"
+          );
         }
 
         setFormMessage("Черновик сохранен в базе данных.");
