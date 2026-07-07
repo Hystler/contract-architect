@@ -4,6 +4,7 @@ import {
   AiProviderError,
   runContractAssistant
 } from "@/lib/ai/provider";
+import { getAiRuntimeSettings } from "@/lib/ai/settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,9 +43,6 @@ const requestSchema = z
   });
 
 const requestBuckets = new Map<string, { count: number; resetAt: number }>();
-const limitWindowMs = 5 * 60 * 1000;
-const maxRequestsPerWindow = 8;
-
 export async function POST(request: Request) {
   const clientId = getClientId(request);
 
@@ -99,6 +97,9 @@ function getClientId(request: Request) {
 }
 
 function isRateLimited(clientId: string) {
+  const settings = getAiRuntimeSettings();
+  const limitWindowMs = settings.rateLimitWindowSeconds * 1000;
+  const maxRequestsPerWindow = settings.maxRequestsPerWindow;
   const now = Date.now();
   const bucket = requestBuckets.get(clientId);
 

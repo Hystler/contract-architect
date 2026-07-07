@@ -46,21 +46,22 @@ export default function HomePage() {
           <Link className="text-sm font-semibold" href="/">
             Contract Architect
           </Link>
-          <Button asChild size="md" variant="secondary">
-            <Link href="/generator">Создать договор</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="md" variant="ghost">
+              <Link href="/admin">Админка</Link>
+            </Button>
+            <Button asChild size="md" variant="secondary">
+              <Link href="/generator">Создать договор</Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 top-24 -z-10 mx-auto hidden max-w-7xl opacity-80 lg:block">
-          <ProductWorkspacePreview />
-        </div>
-
-        <div className="mx-auto flex min-h-[74svh] max-w-7xl items-center">
-          <div className="max-w-3xl py-16">
+        <div className="mx-auto grid min-h-[74svh] max-w-7xl items-center gap-10 py-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,0.98fr)]">
+          <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold-300">
               Шаблонный генератор документов
             </p>
-            <h1 className="mt-5 font-display text-6xl font-semibold leading-[0.96] text-white sm:text-7xl lg:text-8xl">
+            <h1 className="mt-5 max-w-[11ch] break-words font-display text-6xl font-semibold leading-[0.96] text-white sm:text-7xl">
               Contract Architect
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-steel-200">
@@ -81,9 +82,10 @@ export default function HomePage() {
                 <Link href="/preview">Открыть PDF-preview</Link>
               </Button>
             </div>
-            <div className="mt-10 lg:hidden">
-              <ProductWorkspacePreview />
-            </div>
+          </div>
+
+          <div className="w-full">
+            <ProductWorkspacePreview />
           </div>
         </div>
       </section>
@@ -223,7 +225,7 @@ export default function HomePage() {
 
 function ProductWorkspacePreview() {
   return (
-    <div className="w-full rounded-lg border border-white/10 bg-white/[0.04] p-4 shadow-soft lg:ml-auto lg:w-[780px]">
+    <div className="w-full rounded-lg border border-white/10 bg-white/[0.04] p-4 shadow-soft">
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="rounded-md bg-paper-50 p-6 text-graphite-950 shadow-paper">
           <DocumentSheet />

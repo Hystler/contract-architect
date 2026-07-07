@@ -1,3 +1,5 @@
+import { getAiRuntimeSettings } from "@/lib/ai/settings";
+
 export type AiAssistantAction =
   | "explain"
   | "risk_hints"
@@ -35,7 +37,12 @@ const actionLabels: Record<AiAssistantAction, string> = {
 };
 
 export async function runContractAssistant(input: AiAssistantInput) {
-  const provider = process.env.AI_PROVIDER || "openai";
+  const settings = getAiRuntimeSettings();
+  const provider = settings.provider || process.env.AI_PROVIDER || "openai";
+
+  if (!settings.enabled) {
+    throw new AiProviderError("AI-помощник отключён в админке.");
+  }
 
   if (provider !== "openai") {
     throw new AiProviderError(
@@ -50,7 +57,7 @@ export async function runContractAssistant(input: AiAssistantInput) {
     );
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const model = settings.model || process.env.OPENAI_MODEL || "gpt-4.1-mini";
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
 
@@ -67,7 +74,7 @@ export async function runContractAssistant(input: AiAssistantInput) {
         messages: [
           {
             role: "system",
-            content: buildSystemPrompt()
+            content: buildSystemPrompt(settings.customInstruction)
           },
           {
             role: "user",
@@ -113,7 +120,7 @@ export async function runContractAssistant(input: AiAssistantInput) {
   }
 }
 
-function buildSystemPrompt() {
+function buildSystemPrompt(customInstruction: string) {
   return [
     "Ты AI-помощник в шаблонном генераторе договоров Contract Architect.",
     "Ты не являешься юристом и не даёшь юридическую гарантию.",
@@ -124,8 +131,11 @@ function buildSystemPrompt() {
     "Если информации недостаточно, прямо скажи, что нужно уточнить.",
     "Не советуй подписывать документ без проверки специалистом.",
     "Не меняй смысл договора без явного указания пользователя.",
-    "Отвечай по-русски, кратко, структурировано и без маркетинговых обещаний."
-  ].join("\n");
+    "Отвечай по-русски, кратко, структурировано и без маркетинговых обещаний.",
+    customInstruction ? `Дополнительная инструкция администратора: ${customInstruction}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function buildUserPrompt(input: AiAssistantInput) {

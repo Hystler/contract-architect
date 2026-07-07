@@ -51,7 +51,12 @@ npm install
 DATABASE_URL=""
 DIRECT_URL=""
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+ADMIN_ACCESS_TOKEN=""
 AI_PROVIDER="openai"
+AI_ENABLED="true"
+AI_MAX_REQUESTS_PER_WINDOW="8"
+AI_RATE_LIMIT_WINDOW_SECONDS="300"
+AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-4.1-mini"
 ```
@@ -80,7 +85,12 @@ http://localhost:3000
 DATABASE_URL=""
 DIRECT_URL=""
 NEXT_PUBLIC_APP_URL=""
+ADMIN_ACCESS_TOKEN=""
 AI_PROVIDER="openai"
+AI_ENABLED="true"
+AI_MAX_REQUESTS_PER_WINDOW="8"
+AI_RATE_LIMIT_WINDOW_SECONDS="300"
+AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-4.1-mini"
 ```
@@ -93,7 +103,13 @@ OPENAI_MODEL="gpt-4.1-mini"
   Prisma migrations и прямое подключение к базе.
 - `NEXT_PUBLIC_APP_URL` — публичный URL приложения, например
   `https://your-project.vercel.app`.
+- `ADMIN_ACCESS_TOKEN` — простой ключ доступа для изменения настроек на
+  странице `/admin`. В production без него сохранение настроек заблокировано.
 - `AI_PROVIDER` — AI-провайдер. В MVP поддерживается `openai`.
+- `AI_ENABLED` — включает или отключает AI по умолчанию.
+- `AI_MAX_REQUESTS_PER_WINDOW` — лимит AI-запросов на IP за окно времени.
+- `AI_RATE_LIMIT_WINDOW_SECONDS` — длина окна лимита в секундах.
+- `AI_CUSTOM_INSTRUCTION` — дополнительная server-side инструкция AI.
 - `OPENAI_API_KEY` — серверный ключ OpenAI. Не должен попадать на клиент.
 - `OPENAI_MODEL` — модель для AI-помощника, по умолчанию `gpt-4.1-mini`.
 
@@ -172,7 +188,12 @@ git push -u origin main
 DATABASE_URL=""
 DIRECT_URL=""
 NEXT_PUBLIC_APP_URL="https://your-project.vercel.app"
+ADMIN_ACCESS_TOKEN=""
 AI_PROVIDER="openai"
+AI_ENABLED="true"
+AI_MAX_REQUESTS_PER_WINDOW="8"
+AI_RATE_LIMIT_WINDOW_SECONDS="300"
+AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-4.1-mini"
 ```
@@ -181,6 +202,7 @@ OPENAI_MODEL="gpt-4.1-mini"
 оставить пустыми. Для сохранения черновиков укажите Supabase/PostgreSQL URL.
 Для работы AI-подсказок добавьте `OPENAI_API_KEY`. Без ключа генератор,
 DOCX/ZIP экспорт и PDF-preview продолжают работать.
+Для изменения настроек на `/admin` в production добавьте `ADMIN_ACCESS_TOKEN`.
 
 ## Миграции на Supabase
 
@@ -340,6 +362,22 @@ Payload:
 Ключ OpenAI используется только на сервере. Route ограничивает размер текста,
 имеет простой rate limit и возвращает русские ошибки без внутренних деталей.
 
+## Админка
+
+Страница `/admin` позволяет управлять runtime-настройками AI:
+
+- включить или отключить AI-помощника;
+- выбрать модель;
+- настроить rate limit;
+- добавить дополнительную инструкцию AI;
+- проверить статус `OPENAI_API_KEY` и `ADMIN_ACCESS_TOKEN`.
+
+Важно: API-ключ OpenAI нельзя вводить и хранить через интерфейс. Его нужно
+добавлять как env-переменную `OPENAI_API_KEY` в Vercel или локальном окружении.
+Runtime-настройки из админки хранятся в памяти serverless-инстанса и могут
+сброситься при cold start или redeploy. Для постоянных production-настроек
+следующим шагом стоит добавить хранение в PostgreSQL/Supabase.
+
 ## API
 
 - `POST /api/generate` — формирует ZIP с договором и актом, не зависит от базы.
@@ -347,6 +385,9 @@ Payload:
 - `GET /api/templates` — возвращает активные шаблоны из базы или fallback-список.
 - `POST /api/ai/contract-assistant` — возвращает AI-подсказки, требует
   `OPENAI_API_KEY`.
+- `GET /api/admin/ai-settings` — возвращает безопасный статус AI-настроек.
+- `POST /api/admin/ai-settings` — сохраняет runtime-настройки AI, в production
+  требует `ADMIN_ACCESS_TOKEN`.
 
 ## Что не входит в MVP
 
