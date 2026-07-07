@@ -111,7 +111,15 @@ export const contractFormSchema = z
     prepaymentDate: optionalDateField,
     finalPaymentDate: optionalDateField,
     startDate: optionalDateField,
-    endDate: optionalDateField
+    endDate: optionalDateField,
+    personalDataConsent: z
+      .boolean({
+        required_error: "Необходимо согласие на обработку персональных данных.",
+        invalid_type_error: "Необходимо согласие на обработку персональных данных."
+      })
+      .refine((value) => value, {
+        message: "Необходимо согласие на обработку персональных данных."
+      })
   })
   .superRefine((data, ctx) => {
     const paymentSum = roundMoney(data.prepaymentAmount + data.finalPaymentAmount);
@@ -181,5 +189,6 @@ export const defaultContractValues = {
   prepaymentDate: "",
   finalPaymentDate: "",
   startDate: "",
-  endDate: ""
+  endDate: "",
+  personalDataConsent: false
 } satisfies z.input<typeof contractFormSchema>;

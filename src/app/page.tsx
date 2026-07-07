@@ -20,6 +20,14 @@ const workflow = [
   }
 ];
 
+const audiences = [
+  "Фрилансеры",
+  "ИП",
+  "Малый бизнес",
+  "Подрядчики",
+  "Агентства"
+];
+
 const templates = [
   {
     title: "Договор оказания услуг",
@@ -34,8 +42,24 @@ const templates = [
 const aiActions = [
   "Объяснить пункт простым языком",
   "Найти потенциально спорные места",
+  "Проверить, каких данных не хватает",
   "Упростить формулировку без автозамены",
   "Подготовить вопросы к юристу"
+];
+
+const serviceLimits = [
+  "Не заменяет юриста",
+  "Не оказывает юридические услуги",
+  "Не пишет договоры с нуля",
+  "Не обещает юридическую силу",
+  "Не применяет AI-правки автоматически"
+];
+
+const legalLinks = [
+  { href: "/privacy", label: "Персональные данные" },
+  { href: "/terms", label: "Соглашение" },
+  { href: "/consent", label: "Согласие на ПДн" },
+  { href: "/cookies", label: "Cookies" }
 ];
 
 export default function HomePage() {
@@ -61,13 +85,12 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold-300">
               Шаблонный генератор документов
             </p>
-            <h1 className="mt-5 max-w-[11ch] break-words font-display text-6xl font-semibold leading-[0.96] text-white sm:text-7xl">
-              Contract Architect
+            <h1 className="mt-5 max-w-[14ch] break-words font-display text-5xl font-semibold leading-[0.98] text-white sm:text-6xl xl:text-7xl">
+              Генератор договоров и актов по шаблонам
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-steel-200">
-              Генератор договоров и актов по заранее подготовленным DOCX-шаблонам.
-              Пользователь сам вводит данные, система проверяет форму и отдаёт
-              готовый пакет файлов.
+              Заполните форму один раз — получите договор, акт, DOCX, ZIP и
+              PDF-preview.
             </p>
             <p className="mt-5 max-w-2xl text-base leading-7 text-steel-300">
               Документы формируются на основе заранее подготовленных шаблонов.
@@ -86,6 +109,33 @@ export default function HomePage() {
 
           <div className="w-full">
             <ProductWorkspacePreview />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-paper-50 px-5 py-16 text-graphite-950 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.7fr_1fr] lg:items-start">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-500">
+              Для кого
+            </p>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-tight sm:text-5xl">
+              Для тех, кто регулярно оформляет работы и услуги
+            </h2>
+            <p className="mt-5 text-base leading-7 text-muted-500">
+              MVP помогает быстро собрать аккуратный пакет документов по
+              шаблону и передать его на финальную проверку.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {audiences.map((audience) => (
+              <div
+                className="rounded-lg border border-legal-border bg-white p-5 text-lg font-semibold shadow-paper"
+                key={audience}
+              >
+                {audience}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -148,7 +198,8 @@ export default function HomePage() {
             </h2>
             <p className="mt-5 text-base leading-7 text-muted-500">
               Помощник показывает объяснения, подсказки по вниманию и варианты
-              более понятной формулировки. Он не применяет правки автоматически.
+              более понятной формулировки. Доступ к AI будет открываться после
+              оплаты подписки.
             </p>
             <ul className="mt-6 space-y-3">
               {aiActions.map((action) => (
@@ -165,6 +216,39 @@ export default function HomePage() {
       </section>
 
       <section className="bg-surface-100 px-5 py-16 text-graphite-950 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-500">
+              Тариф
+            </p>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-tight sm:text-5xl">
+              AI-помощник как платный слой проверки
+            </h2>
+            <p className="mt-5 text-base leading-7 text-muted-500">
+              Генерация документов остаётся шаблонной. Подписка нужна для
+              AI-проверок, объяснений и будущей истории документов.
+            </p>
+          </div>
+          <article className="rounded-lg border border-legal-border bg-paper-50 p-6 shadow-paper">
+            <h3 className="font-display text-3xl font-semibold">Старт</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-500">
+              Цена будет указана позже. Оплата будет подключена после выбора
+              платежного провайдера.
+            </p>
+            <ul className="mt-5 space-y-3 text-sm leading-6 text-muted-500">
+              <li>Генерация DOCX/PDF-preview</li>
+              <li>AI-проверки документов</li>
+              <li>Лимит AI-запросов</li>
+              <li>Будущая история документов</li>
+            </ul>
+            <Button asChild className="mt-6" variant="secondary">
+              <Link href="/pricing">Оформить доступ</Link>
+            </Button>
+          </article>
+        </div>
+      </section>
+
+      <section className="bg-paper-50 px-5 py-16 text-graphite-950 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-500">
@@ -201,14 +285,18 @@ export default function HomePage() {
               Ограничения
             </p>
             <h2 className="mt-4 font-display text-4xl font-semibold leading-tight sm:text-5xl">
-              Прозрачный MVP без обещаний юридической силы
+              Что не делает сервис
             </h2>
           </div>
-          <div className="rounded-lg border border-white/10 bg-white/[0.045] p-6 text-base leading-8 text-steel-200">
-            Сервис не заменяет юриста, не гарантирует отсутствие рисков и не
-            генерирует договоры с нуля. Он помогает аккуратно заполнить
-            подготовленные шаблоны и получить пакет документов для дальнейшей
-            проверки.
+          <div className="grid gap-3 sm:grid-cols-2">
+            {serviceLimits.map((item) => (
+              <div
+                className="rounded-lg border border-white/10 bg-white/[0.045] p-4 text-base leading-7 text-steel-200"
+                key={item}
+              >
+                {item}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -216,7 +304,13 @@ export default function HomePage() {
       <footer className="border-t border-white/10 bg-ink-950 px-5 py-8 text-sm text-steel-300 sm:px-8 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p>Contract Architect</p>
-          <p>Шаблоны DOCX, экспорт ZIP, HTML-preview для печати в PDF.</p>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2">
+            {legalLinks.map((link) => (
+              <Link className="hover:text-gold-300" href={link.href} key={link.href}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </footer>
     </main>

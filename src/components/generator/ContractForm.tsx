@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -376,6 +377,29 @@ export function ContractForm() {
           </div>
         </section>
 
+        <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
+          <label className="flex items-start gap-3">
+            <input
+              className="mt-1 h-5 w-5 shrink-0 rounded border-legal-border text-gold-500 focus:ring-gold-500"
+              type="checkbox"
+              {...register("personalDataConsent")}
+            />
+            <span className="text-sm leading-6 text-muted-500">
+              Я{" "}
+              <Link className="font-semibold text-graphite-950 underline decoration-gold-500/45 underline-offset-4" href="/consent" target="_blank">
+                согласен на обработку персональных данных
+              </Link>{" "}
+              и ознакомлен с{" "}
+              <Link className="font-semibold text-graphite-950 underline decoration-gold-500/45 underline-offset-4" href="/privacy" target="_blank">
+                Политикой обработки персональных данных
+              </Link>
+              . Данные формы передаются на сервер для формирования ZIP и могут
+              использоваться для AI-проверки только при наличии подписки.
+            </span>
+          </label>
+          <FieldError message={errors.personalDataConsent?.message} />
+        </section>
+
         {formMessage ? (
           <div className="rounded-md border border-gold-500/30 bg-gold-500/10 p-4 text-sm text-graphite-950">
             {formMessage}
@@ -383,6 +407,7 @@ export function ContractForm() {
         ) : null}
 
         <GenerateActions
+          hasPersonalDataConsent={Boolean(watchedValues.personalDataConsent)}
           isGenerating={isGenerating}
           isSaving={isSaving}
           onPreview={openPreview}
@@ -395,6 +420,8 @@ export function ContractForm() {
         <AiAssistantPanel
           defaultSelectedText={defaultAiText}
           fullText={assistantText}
+          hasActiveSubscription={false}
+          hasPersonalDataConsent={Boolean(watchedValues.personalDataConsent)}
         />
       </aside>
     </form>

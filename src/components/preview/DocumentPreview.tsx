@@ -33,7 +33,8 @@ const sampleData: ContractFormValues = {
     { name: "Подготовка итогового отчета" }
   ],
   startDate: defaultContractValues.contractDate,
-  endDate: defaultContractValues.actDate
+  endDate: defaultContractValues.actDate,
+  personalDataConsent: true
 };
 
 export function DocumentPreview() {
@@ -89,6 +90,8 @@ export function DocumentPreview() {
         <AiAssistantPanel
           defaultSelectedText={templateData.works_description}
           fullText={buildContractTextFromTemplateData(templateData)}
+          hasActiveSubscription={false}
+          hasPersonalDataConsent={!isFallback}
         />
       </div>
     </div>

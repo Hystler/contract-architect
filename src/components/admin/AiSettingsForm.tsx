@@ -26,7 +26,7 @@ type SettingsResponse = {
 const fallbackSettings: AiSettings = {
   enabled: false,
   provider: "openai",
-  model: "gpt-4.1-mini",
+  model: "gpt-5-mini",
   maxRequestsPerWindow: 8,
   rateLimitWindowSeconds: 300,
   customInstruction: "",
@@ -149,7 +149,8 @@ export function AiSettingsForm() {
         body: JSON.stringify({
           action: "risk_hints",
           fullText:
-            "Договор оказания услуг. Срок оплаты и порядок передачи результата не указаны."
+            "Договор оказания услуг. Срок оплаты и порядок передачи результата не указаны.",
+          personalDataConsent: true
         })
       });
 
@@ -230,7 +231,7 @@ export function AiSettingsForm() {
             </span>
             <Input
               onChange={(event) => updateSettings({ model: event.target.value })}
-              placeholder="gpt-4.1-mini"
+              placeholder="gpt-5-mini"
               value={settings.model}
             />
           </label>
@@ -352,8 +353,9 @@ export function AiSettingsForm() {
           <h3 className="text-lg font-semibold">Что добавить в Vercel</h3>
           <div className="mt-4 space-y-2 rounded-md border border-white/10 bg-ink-950 p-4 font-mono text-xs leading-6 text-steel-200">
             <p>OPENAI_API_KEY=...</p>
-            <p>OPENAI_MODEL=gpt-4.1-mini</p>
+            <p>OPENAI_MODEL=gpt-5-mini</p>
             <p>AI_ENABLED=true</p>
+            <p>AI_MONTHLY_TOKEN_LIMIT=50000</p>
             <p>ADMIN_ACCESS_TOKEN=...</p>
           </div>
           <p className="mt-4 text-sm leading-6 text-steel-300">

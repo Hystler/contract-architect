@@ -1,15 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 
-type AiAction = "explain" | "risk_hints" | "rewrite" | "questions";
+type AiAction =
+  | "explain"
+  | "risk_hints"
+  | "missing_data"
+  | "questions"
+  | "rewrite";
 
 type AiAssistantPanelProps = {
   contractType?: string;
   defaultSelectedText?: string;
   fullText: string;
+  hasActiveSubscription?: boolean;
+  hasPersonalDataConsent?: boolean;
 };
 
 const quickActions: Array<{
@@ -28,6 +36,11 @@ const quickActions: Array<{
     description: "Подсказки по вниманию"
   },
   {
+    action: "missing_data",
+    title: "Проверить заполненность",
+    description: "Каких данных не хватает"
+  },
+  {
     action: "rewrite",
     title: "Упростить формулировку",
     description: "Без автоматической замены"
@@ -42,7 +55,9 @@ const quickActions: Array<{
 export function AiAssistantPanel({
   contractType = "Договор оказания услуг",
   defaultSelectedText = "",
-  fullText
+  fullText,
+  hasActiveSubscription = false,
+  hasPersonalDataConsent = false
 }: AiAssistantPanelProps) {
   const [selectedText, setSelectedText] = useState(defaultSelectedText);
   const [userQuestion, setUserQuestion] = useState("");
@@ -61,18 +76,32 @@ export function AiAssistantPanel({
     [selectedText]
   );
 
+  if (!hasActiveSubscription) {
+    return <LockedAiPanel />;
+  }
+
   async function askAssistant(action: AiAction) {
     setActiveAction(action);
     setError("");
     setResult("");
     setCopyMessage("");
 
+    if (!hasPersonalDataConsent) {
+      setError("Для отправки текста в AI нужно согласие на обработку персональных данных.");
+      return;
+    }
+
     if ((action === "explain" || action === "rewrite") && !canUseSelectedText) {
       setError("Вставьте пункт договора или заполните форму, чтобы AI было что объяснить.");
       return;
     }
 
-    if ((action === "risk_hints" || action === "questions") && !fullText.trim()) {
+    if (
+      (action === "risk_hints" ||
+        action === "missing_data" ||
+        action === "questions") &&
+      !fullText.trim()
+    ) {
       setError("Заполните основные данные договора перед анализом.");
       return;
     }
@@ -81,8 +110,10 @@ export function AiAssistantPanel({
 
     try {
       const shouldSendFullText =
-        action === "risk_hints" || action === "questions";
-      const response = await fetch("/api/ai/contract-assistant", {
+        action === "risk_hints" ||
+        action === "missing_data" ||
+        action === "questions";
+      const response = await fetch("/api/ai/contract-check", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -92,7 +123,8 @@ export function AiAssistantPanel({
           contractType,
           selectedText: selectedText.trim() || undefined,
           fullText: shouldSendFullText ? fullText.trim() || undefined : undefined,
-          userQuestion: userQuestion.trim() || undefined
+          userQuestion: userQuestion.trim() || undefined,
+          personalDataConsent: hasPersonalDataConsent
         })
       });
 
@@ -148,7 +180,7 @@ export function AiAssistantPanel({
         {quickActions.map((item) => (
           <button
             className="cursor-pointer rounded-md border border-white/10 bg-white/[0.045] p-3 text-left transition hover:border-blue-300/45 hover:bg-blue-300/10 focus:outline-none focus:ring-2 focus:ring-blue-300/45"
-            disabled={isLoading}
+            disabled={isLoading || !hasPersonalDataConsent}
             key={item.action}
             onClick={() => askAssistant(item.action)}
             type="button"
@@ -162,6 +194,13 @@ export function AiAssistantPanel({
           </button>
         ))}
       </div>
+
+      {!hasPersonalDataConsent ? (
+        <div className="mt-5 rounded-md border border-gold-300/25 bg-gold-300/10 p-4 text-sm leading-6 text-gold-100">
+          Перед отправкой текста в AI отметьте согласие на обработку
+          персональных данных в форме генератора.
+        </div>
+      ) : null}
 
       <label className="mt-5 block">
         <span className="mb-2 block text-sm font-medium text-steel-200">
@@ -218,6 +257,29 @@ export function AiAssistantPanel({
         AI не меняет договор автоматически. Используйте ответ как черновик для
         обсуждения и финальной проверки со специалистом.
       </div>
+    </section>
+  );
+}
+
+function LockedAiPanel() {
+  return (
+    <section className="rounded-lg border border-blue-400/20 bg-graphite-900 p-5 text-white shadow-ai">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+        AI-помощник
+      </p>
+      <h2 className="mt-2 text-xl font-semibold">Доступ после оплаты</h2>
+      <p className="mt-4 text-sm leading-6 text-steel-200">
+        AI-проверка документов доступна только в подписке. Генерация DOCX, ZIP
+        и PDF-preview остаётся доступной без AI.
+      </p>
+      <div className="mt-5 rounded-md border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-steel-300">
+        AI сможет объяснять пункты, подсвечивать места для проверки, искать
+        пропущенные данные и готовить вопросы к юристу. Это не юридическая
+        консультация.
+      </div>
+      <Button asChild className="mt-5 w-full" size="lg">
+        <Link href="/pricing">Оформить доступ</Link>
+      </Button>
     </section>
   );
 }
