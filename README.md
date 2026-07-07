@@ -103,10 +103,12 @@ AUTH_SECRET=""
 
 Назначение переменных:
 
-- `DATABASE_URL` — PostgreSQL connection string. Для Supabase обычно это pooled
-  connection URL.
-- `DIRECT_URL` — прямое подключение к PostgreSQL. Для Supabase используется
-  Prisma migrations и прямое подключение к базе.
+- `DATABASE_URL` — PostgreSQL connection string. Для Supabase в этом MVP
+  рекомендуется session pooler URL на порту `5432`: он стабильнее работает с
+  Prisma Client и prepared statements.
+- `DIRECT_URL` — подключение для Prisma migrations. Если прямой Supabase host
+  `db.<project-ref>.supabase.co:5432` недоступен из вашей сети, используйте
+  session pooler URL на порту `5432`.
 - `NEXT_PUBLIC_APP_URL` — публичный URL приложения, например
   `https://your-project.vercel.app`.
 - `OPENAI_API_KEY` — серверный ключ OpenAI. Не должен попадать на клиент.
@@ -127,18 +129,26 @@ AUTH_SECRET=""
 1. Создайте проект в Supabase.
 2. Откройте `Project Settings` → `Database`.
 3. Скопируйте PostgreSQL connection string.
-4. Для `DATABASE_URL` используйте pooled connection string.
-5. Для `DIRECT_URL` используйте direct connection string.
+4. Для `DATABASE_URL` используйте session pooler connection string.
+5. Для `DIRECT_URL` используйте direct connection string. Если direct host
+   недоступен из-за IPv6/сетевых ограничений, используйте session pooler.
 6. Убедитесь, что пароль базы закодирован для URL, если содержит спецсимволы.
 
 Пример формата:
 
 ```env
-DATABASE_URL="postgresql://postgres.project-ref:password@aws-0-region.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
-DIRECT_URL="postgresql://postgres:password@db.project-ref.supabase.co:5432/postgres"
+DATABASE_URL="postgresql://postgres.project-ref:password@aws-0-region.pooler.supabase.com:5432/postgres?sslmode=require"
+DIRECT_URL="postgresql://postgres.project-ref:password@aws-0-region.pooler.supabase.com:5432/postgres?sslmode=require"
 ```
 
 Это пример формата, а не реальные ключи.
+
+Для Prisma 5 не добавляйте `pgbouncer=true` к Supabase pooler URL: в некоторых
+окружениях это приводит к закрытию соединения. Если используете transaction
+pooler на `6543`, добавьте `statement_cache_size=0`, но для текущего MVP
+надёжнее session pooler на `5432`. Для миграций предпочтителен direct
+connection из Supabase; session pooler нужен как fallback, когда direct host
+недоступен.
 
 ## Prisma
 
@@ -175,6 +185,12 @@ Supabase/PostgreSQL базы можно использовать `npx prisma mig
 ```bash
 npx prisma migrate deploy
 ```
+
+Если Supabase pooler возвращает `P1002` или `P1017` при миграциях, проверьте
+`DIRECT_URL`: сначала попробуйте direct connection, затем session pooler. При
+проблемах с advisory lock можно разово запускать команду с
+`PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1`. Не запускайте миграции автоматически на
+каждом Vercel build.
 
 Перед `prisma validate` или миграциями задайте реальные `DATABASE_URL` и
 `DIRECT_URL`, потому что Prisma CLI валидирует datasource.

@@ -2,9 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Button } from "@/components/ui/Button";
+import {
+  databaseUnavailableMessage,
+  isDatabaseUnavailableError,
+  isMigrationError,
+  migrationsNotAppliedMessage
+} from "@/lib/api/errors";
 import { getCurrentUserSession } from "@/lib/auth/currentUser";
 import { getActiveSubscription } from "@/lib/billing/hasActiveSubscription";
-import { prisma } from "@/lib/prisma";
+import { runPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -15,30 +21,54 @@ export default async function AccountPage() {
     redirect("/login");
   }
 
-  const user = process.env.DATABASE_URL
-    ? await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: {
-          id: true,
-          email: true,
-          createdAt: true,
-          aiUsage: {
-            where: { period: getCurrentPeriod() },
-            select: { requestCount: true, totalTokens: true },
-            take: 1
-          }
-        }
-      })
-    : null;
+  let accountError = "";
+  let user:
+    | {
+        id: string;
+        email: string;
+        createdAt: Date;
+      }
+    | null = null;
+  let activeSubscription: Awaited<ReturnType<typeof getActiveSubscription>> =
+    null;
+  let usage: { requestCount: number; totalTokens: number } | null = null;
 
-  if (process.env.DATABASE_URL && !user) {
-    redirect("/login");
+  if (process.env.DATABASE_URL) {
+    try {
+      user = await runPrisma((client) =>
+        client.user.findUnique({
+          where: { id: session.userId },
+          select: {
+            id: true,
+            email: true,
+            createdAt: true
+          }
+        })
+      );
+      activeSubscription = await getActiveSubscription(session.userId);
+      usage = await runPrisma((client) =>
+        client.aiUsage.findUnique({
+          where: {
+            userId_period: {
+              userId: session.userId,
+              period: getCurrentPeriod()
+            }
+          },
+          select: { requestCount: true, totalTokens: true }
+        })
+      );
+    } catch (error) {
+      accountError = isMigrationError(error)
+        ? migrationsNotAppliedMessage
+        : isDatabaseUnavailableError(error)
+          ? databaseUnavailableMessage
+          : "Не удалось загрузить данные аккаунта.";
+    }
   }
 
-  const activeSubscription = process.env.DATABASE_URL
-    ? await getActiveSubscription(session.userId)
-    : null;
-  const usage = user?.aiUsage[0];
+  if (process.env.DATABASE_URL && !accountError && !user) {
+    redirect("/login");
+  }
 
   return (
     <main className="min-h-screen bg-ink-950 px-4 py-6 text-white sm:px-6 lg:px-8">
@@ -62,6 +92,12 @@ export default async function AccountPage() {
           <h1 className="mt-3 font-display text-4xl font-semibold">
             {user?.email || session.email}
           </h1>
+
+          {accountError ? (
+            <div className="mt-6 rounded-md border border-red-300/30 bg-red-500/10 p-4 text-sm text-red-800">
+              {accountError}
+            </div>
+          ) : null}
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <InfoCard

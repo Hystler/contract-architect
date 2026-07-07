@@ -8,7 +8,14 @@ import {
   getSessionCookieOptions,
   userSessionMaxAge
 } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
+import {
+  databaseUnavailableMessage,
+  isDatabaseUnavailableError,
+  isMigrationError,
+  isUniqueConstraintError,
+  jsonError
+} from "@/lib/api/errors";
+import { runPrisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -28,10 +35,7 @@ const registerSchema = z
 
 export async function POST(request: Request) {
   if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { message: "База данных не подключена. Регистрация недоступна." },
-      { status: 503 }
-    );
+    return jsonError(databaseUnavailableMessage, 503);
   }
 
   try {
@@ -49,10 +53,12 @@ export async function POST(request: Request) {
     }
 
     const email = parsed.data.email.toLowerCase();
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true }
-    });
+    const existingUser = await runPrisma((client) =>
+      client.user.findUnique({
+        where: { email },
+        select: { id: true }
+      })
+    );
 
     if (existingUser) {
       return NextResponse.json(
@@ -62,16 +68,18 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashPassword(parsed.data.password);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        passwordHash
-      },
-      select: {
-        id: true,
-        email: true
-      }
-    });
+    const user = await runPrisma((client) =>
+      client.user.create({
+        data: {
+          email,
+          passwordHash
+        },
+        select: {
+          id: true,
+          email: true
+        }
+      })
+    );
 
     const response = NextResponse.json({ user });
     response.cookies.set(
@@ -82,11 +90,25 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json(
+        {
+          error: "Пользователь с таким email уже зарегистрирован.",
+          message: "Пользователь с таким email уже зарегистрирован."
+        },
+        { status: 409 }
+      );
+    }
+
+    if (isDatabaseUnavailableError(error) || isMigrationError(error)) {
+      return jsonError(databaseUnavailableMessage, 503);
+    }
+
     const message =
       error instanceof AuthConfigurationError
         ? error.message
         : "Не удалось зарегистрировать пользователя.";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return jsonError(message, 500);
   }
 }

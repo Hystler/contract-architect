@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { adminDatabaseErrorResponse, jsonError } from "@/lib/api/errors";
 import { requireAdminSession } from "@/lib/auth/adminGuard";
-import { prisma } from "@/lib/prisma";
+import { runPrisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -16,10 +17,7 @@ export async function POST(request: Request) {
   }
 
   if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { message: "База данных не подключена." },
-      { status: 503 }
-    );
+    return jsonError("База данных не подключена", 503);
   }
 
   try {
@@ -35,22 +33,24 @@ export async function POST(request: Request) {
       );
     }
 
-    await prisma.subscription.updateMany({
-      where: {
-        userId: parsed.data.userId,
-        status: "ACTIVE"
-      },
-      data: {
-        status: "CANCELED",
-        currentPeriodEnd: new Date()
-      }
-    });
+    await runPrisma((client) =>
+      client.subscription.updateMany({
+        where: {
+          userId: parsed.data.userId,
+          status: "ACTIVE"
+        },
+        data: {
+          status: "CANCELED",
+          currentPeriodEnd: new Date()
+        }
+      })
+    );
 
     return NextResponse.json({ message: "Premium-доступ отключён." });
-  } catch {
-    return NextResponse.json(
-      { message: "Не удалось отключить premium-доступ." },
-      { status: 500 }
+  } catch (error) {
+    return adminDatabaseErrorResponse(
+      error,
+      "Не удалось отключить premium-доступ."
     );
   }
 }

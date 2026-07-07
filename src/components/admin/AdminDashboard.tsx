@@ -36,13 +36,16 @@ export function AdminDashboard() {
         `/api/admin/users${search ? `?q=${encodeURIComponent(search)}` : ""}`,
         { cache: "no-store" }
       );
-      const data = (await response.json()) as {
+      const data = (await readJsonResponse(response)) as {
         users?: AdminUser[];
+        error?: string;
         message?: string;
       };
 
       if (!response.ok) {
-        throw new Error(data.message || "Не удалось загрузить пользователей.");
+        throw new Error(
+          data.error || data.message || "Не удалось загрузить пользователей."
+        );
       }
 
       setUsers(data.users || []);
@@ -74,10 +77,15 @@ export function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const data = (await response.json()) as { message?: string };
+      const data = (await readJsonResponse(response)) as {
+        error?: string;
+        message?: string;
+      };
 
       if (!response.ok) {
-        throw new Error(data.message || "Не удалось выполнить действие.");
+        throw new Error(
+          data.error || data.message || "Не удалось выполнить действие."
+        );
       }
 
       setMessage(data.message || "Готово.");
@@ -213,4 +221,18 @@ function formatDate(value: string) {
     month: "short",
     year: "numeric"
   }).format(new Date(value));
+}
+
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    throw new Error("Сервер вернул некорректный ответ.");
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Сервер вернул некорректный ответ.");
+  }
 }

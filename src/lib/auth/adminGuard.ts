@@ -1,5 +1,5 @@
 import "server-only";
-import { NextResponse } from "next/server";
+import { jsonError } from "@/lib/api/errors";
 import { getAdminSessionFromRequest } from "@/lib/auth/currentUser";
 import { AuthConfigurationError } from "@/lib/auth/session";
 
@@ -9,10 +9,7 @@ export function requireAdminSession(request: Request) {
 
     if (!session) {
       return {
-        response: NextResponse.json(
-          { message: "Требуется вход администратора." },
-          { status: 401 }
-        ),
+        response: jsonError("Требуется вход администратора.", 401),
         session: null
       };
     }
@@ -21,11 +18,14 @@ export function requireAdminSession(request: Request) {
   } catch (error) {
     if (error instanceof AuthConfigurationError) {
       return {
-        response: NextResponse.json({ message: error.message }, { status: 500 }),
+        response: jsonError(error.message, 500),
         session: null
       };
     }
 
-    throw error;
+    return {
+      response: jsonError("Не удалось проверить сессию администратора.", 500),
+      session: null
+    };
   }
 }

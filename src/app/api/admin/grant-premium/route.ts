@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { adminDatabaseErrorResponse, jsonError } from "@/lib/api/errors";
 import { requireAdminSession } from "@/lib/auth/adminGuard";
-import { prisma } from "@/lib/prisma";
+import { runPrisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -17,10 +18,7 @@ export async function POST(request: Request) {
   }
 
   if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { message: "База данных не подключена." },
-      { status: 503 }
-    );
+    return jsonError("База данных не подключена", 503);
   }
 
   try {
@@ -40,10 +38,12 @@ export async function POST(request: Request) {
     const currentPeriodEnd = new Date(now);
     currentPeriodEnd.setDate(currentPeriodEnd.getDate() + parsed.data.days);
 
-    const user = await prisma.user.findUnique({
-      where: { id: parsed.data.userId },
-      select: { id: true }
-    });
+    const user = await runPrisma((client) =>
+      client.user.findUnique({
+        where: { id: parsed.data.userId },
+        select: { id: true }
+      })
+    );
 
     if (!user) {
       return NextResponse.json(
@@ -52,44 +52,50 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingSubscription = await prisma.subscription.findFirst({
-      where: {
-        userId: parsed.data.userId,
-        provider: "MANUAL_ADMIN"
-      },
-      orderBy: { createdAt: "desc" },
-      select: { id: true }
-    });
+    const existingSubscription = await runPrisma((client) =>
+      client.subscription.findFirst({
+        where: {
+          userId: parsed.data.userId,
+          provider: "MANUAL_ADMIN"
+        },
+        orderBy: { createdAt: "desc" },
+        select: { id: true }
+      })
+    );
 
     if (existingSubscription) {
-      await prisma.subscription.update({
-        where: { id: existingSubscription.id },
-        data: {
-          status: "ACTIVE",
-          plan: "PREMIUM",
-          provider: "MANUAL_ADMIN",
-          currentPeriodStart: now,
-          currentPeriodEnd
-        }
-      });
+      await runPrisma((client) =>
+        client.subscription.update({
+          where: { id: existingSubscription.id },
+          data: {
+            status: "ACTIVE",
+            plan: "PREMIUM",
+            provider: "MANUAL_ADMIN",
+            currentPeriodStart: now,
+            currentPeriodEnd
+          }
+        })
+      );
     } else {
-      await prisma.subscription.create({
-        data: {
-          userId: parsed.data.userId,
-          status: "ACTIVE",
-          plan: "PREMIUM",
-          provider: "MANUAL_ADMIN",
-          currentPeriodStart: now,
-          currentPeriodEnd
-        }
-      });
+      await runPrisma((client) =>
+        client.subscription.create({
+          data: {
+            userId: parsed.data.userId,
+            status: "ACTIVE",
+            plan: "PREMIUM",
+            provider: "MANUAL_ADMIN",
+            currentPeriodStart: now,
+            currentPeriodEnd
+          }
+        })
+      );
     }
 
     return NextResponse.json({ message: "Premium-доступ выдан." });
-  } catch {
-    return NextResponse.json(
-      { message: "Не удалось выдать premium-доступ." },
-      { status: 500 }
+  } catch (error) {
+    return adminDatabaseErrorResponse(
+      error,
+      "Не удалось выдать premium-доступ."
     );
   }
 }

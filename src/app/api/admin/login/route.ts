@@ -8,6 +8,7 @@ import {
   safeEqual,
   adminSessionMaxAge
 } from "@/lib/auth/session";
+import { jsonError } from "@/lib/api/errors";
 
 export const runtime = "nodejs";
 
@@ -21,10 +22,7 @@ export async function POST(request: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD || "";
 
   if (!adminLogin || !adminPassword) {
-    return NextResponse.json(
-      { message: "ADMIN_LOGIN или ADMIN_PASSWORD не заданы." },
-      { status: 503 }
-    );
+    return jsonError("ADMIN_LOGIN или ADMIN_PASSWORD не заданы.", 503);
   }
 
   try {
@@ -65,6 +63,6 @@ export async function POST(request: Request) {
         ? error.message
         : "Не удалось выполнить вход в админку.";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return jsonError(message, 500);
   }
 }

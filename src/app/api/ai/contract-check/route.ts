@@ -10,6 +10,12 @@ import {
   sanitizeContractInput
 } from "@/lib/ai/sanitizeContractInput";
 import { getAiRuntimeSettings } from "@/lib/ai/settings";
+import {
+  databaseUnavailableMessage,
+  isDatabaseUnavailableError,
+  isMigrationError,
+  migrationsNotAppliedMessage
+} from "@/lib/api/errors";
 import { getUserSessionFromRequest } from "@/lib/auth/currentUser";
 import { AuthConfigurationError } from "@/lib/auth/session";
 import { hasActiveSubscription } from "@/lib/billing/hasActiveSubscription";
@@ -97,11 +103,23 @@ export async function POST(request: Request) {
     const parsed = requestSchema.safeParse(payload);
 
     if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+
+      if (fieldErrors.personalDataConsent?.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Необходимо согласие на обработку персональных данных."
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,
           error: "Проверьте данные для AI-помощника.",
-          details: parsed.error.flatten().fieldErrors
+          details: fieldErrors
         },
         { status: 400 }
       );
@@ -183,6 +201,20 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof AuthConfigurationError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    if (isMigrationError(error)) {
+      return NextResponse.json(
+        { success: false, error: migrationsNotAppliedMessage },
+        { status: 500 }
+      );
+    }
+
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json(
+        { success: false, error: databaseUnavailableMessage },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json(
@@ -270,29 +302,31 @@ async function recordAggregateUsage(
   }
 
   try {
-    const { prisma } = await import("@/lib/prisma");
-    await prisma.aiUsage.upsert({
-      where: {
-        userId_period: {
+    const { runPrisma } = await import("@/lib/prisma");
+    await runPrisma((client) =>
+      client.aiUsage.upsert({
+        where: {
+          userId_period: {
+            userId,
+            period: getCurrentPeriod()
+          }
+        },
+        update: {
+          inputTokens: { increment: usage.inputTokens },
+          outputTokens: { increment: usage.outputTokens },
+          totalTokens: { increment: usage.totalTokens },
+          requestCount: { increment: 1 }
+        },
+        create: {
           userId,
-          period: getCurrentPeriod()
+          period: getCurrentPeriod(),
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          totalTokens: usage.totalTokens,
+          requestCount: 1
         }
-      },
-      update: {
-        inputTokens: { increment: usage.inputTokens },
-        outputTokens: { increment: usage.outputTokens },
-        totalTokens: { increment: usage.totalTokens },
-        requestCount: { increment: 1 }
-      },
-      create: {
-        userId,
-        period: getCurrentPeriod(),
-        inputTokens: usage.inputTokens,
-        outputTokens: usage.outputTokens,
-        totalTokens: usage.totalTokens,
-        requestCount: 1
-      }
-    });
+      })
+    );
   } catch {
     // Не раскрываем и не логируем детали: usage является вспомогательной метрикой.
   }

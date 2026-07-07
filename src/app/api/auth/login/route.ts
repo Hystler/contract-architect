@@ -8,7 +8,13 @@ import {
   getSessionCookieOptions,
   userSessionMaxAge
 } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
+import {
+  databaseUnavailableMessage,
+  isDatabaseUnavailableError,
+  isMigrationError,
+  jsonError
+} from "@/lib/api/errors";
+import { runPrisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -19,10 +25,7 @@ const loginSchema = z.object({
 
 export async function POST(request: Request) {
   if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { message: "База данных не подключена. Вход недоступен." },
-      { status: 503 }
-    );
+    return jsonError(databaseUnavailableMessage, 503);
   }
 
   try {
@@ -39,14 +42,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email.toLowerCase() },
-      select: {
-        id: true,
-        email: true,
-        passwordHash: true
-      }
-    });
+    const user = await runPrisma((client) =>
+      client.user.findUnique({
+        where: { email: parsed.data.email.toLowerCase() },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true
+        }
+      })
+    );
 
     if (!user?.passwordHash) {
       return NextResponse.json(
@@ -80,11 +85,15 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
+    if (isDatabaseUnavailableError(error) || isMigrationError(error)) {
+      return jsonError(databaseUnavailableMessage, 503);
+    }
+
     const message =
       error instanceof AuthConfigurationError
         ? error.message
         : "Не удалось выполнить вход.";
 
-    return NextResponse.json({ message }, { status: 500 });
+    return jsonError(message, 500);
   }
 }

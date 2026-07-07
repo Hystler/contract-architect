@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { runPrisma } from "@/lib/prisma";
 import { contractFormSchema } from "@/lib/validation/contractSchema";
 
 export const runtime = "nodejs";
@@ -36,43 +36,47 @@ export async function POST(request: Request) {
 
     // Для production нужно добавить авторизацию, права доступа и политику
     // хранения персональных данных. MVP сохраняет только данные формы.
-    const draft = await prisma.documentDraft.create({
-      data: {
-        contractNumber: data.contractNumber,
-        contractDate: toDate(data.contractDate),
-        city: data.city,
-        actNumber: data.actNumber,
-        actDate: toDate(data.actDate),
-        customerName: data.customerName,
-        customerType: partyTypeToDb[data.customerType],
-        customerRepresentative: data.customerRepresentative || null,
-        customerBasis: data.customerBasis || null,
-        customerRequisites: data.customerRequisites,
-        contractorName: data.contractorName,
-        contractorType: partyTypeToDb[data.contractorType],
-        contractorRepresentative: data.contractorRepresentative || null,
-        contractorBasis: data.contractorBasis || null,
-        contractorRequisites: data.contractorRequisites,
-        subject: data.subject,
-        worksDescription: data.worksDescription,
-        works: data.works,
-        totalAmount: data.totalAmount,
-        prepaymentPercent: data.prepaymentPercent ?? null,
-        prepaymentAmount: data.prepaymentAmount ?? null,
-        finalPaymentAmount: data.finalPaymentAmount ?? null,
-        prepaymentDate: data.prepaymentDate ? toDate(data.prepaymentDate) : null,
-        finalPaymentDate: data.finalPaymentDate
-          ? toDate(data.finalPaymentDate)
-          : null,
-        startDate: data.startDate ? toDate(data.startDate) : null,
-        endDate: data.endDate ? toDate(data.endDate) : null,
-        status: "DRAFT"
-      },
-      select: {
-        id: true,
-        createdAt: true
-      }
-    });
+    const draft = await runPrisma((client) =>
+      client.documentDraft.create({
+        data: {
+          contractNumber: data.contractNumber,
+          contractDate: toDate(data.contractDate),
+          city: data.city,
+          actNumber: data.actNumber,
+          actDate: toDate(data.actDate),
+          customerName: data.customerName,
+          customerType: partyTypeToDb[data.customerType],
+          customerRepresentative: data.customerRepresentative || null,
+          customerBasis: data.customerBasis || null,
+          customerRequisites: data.customerRequisites,
+          contractorName: data.contractorName,
+          contractorType: partyTypeToDb[data.contractorType],
+          contractorRepresentative: data.contractorRepresentative || null,
+          contractorBasis: data.contractorBasis || null,
+          contractorRequisites: data.contractorRequisites,
+          subject: data.subject,
+          worksDescription: data.worksDescription,
+          works: data.works,
+          totalAmount: data.totalAmount,
+          prepaymentPercent: data.prepaymentPercent ?? null,
+          prepaymentAmount: data.prepaymentAmount ?? null,
+          finalPaymentAmount: data.finalPaymentAmount ?? null,
+          prepaymentDate: data.prepaymentDate
+            ? toDate(data.prepaymentDate)
+            : null,
+          finalPaymentDate: data.finalPaymentDate
+            ? toDate(data.finalPaymentDate)
+            : null,
+          startDate: data.startDate ? toDate(data.startDate) : null,
+          endDate: data.endDate ? toDate(data.endDate) : null,
+          status: "DRAFT"
+        },
+        select: {
+          id: true,
+          createdAt: true
+        }
+      })
+    );
 
     return NextResponse.json({ draft });
   } catch {

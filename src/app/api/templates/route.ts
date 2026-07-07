@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { runPrisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,18 +27,20 @@ export async function GET() {
   }
 
   try {
-    const templates = await prisma.documentTemplate.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        type: true,
-        name: true,
-        filePath: true,
-        variables: true,
-        isActive: true
-      }
-    });
+    const templates = await runPrisma((client) =>
+      client.documentTemplate.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          type: true,
+          name: true,
+          filePath: true,
+          variables: true,
+          isActive: true
+        }
+      })
+    );
 
     return NextResponse.json({
       templates: templates.length > 0 ? templates : fallbackTemplates

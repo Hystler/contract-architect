@@ -20,10 +20,15 @@ export function AdminLoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login, password })
       });
-      const data = (await response.json()) as { message?: string };
+      const data = (await readJsonResponse(response)) as {
+        error?: string;
+        message?: string;
+      };
 
       if (!response.ok) {
-        throw new Error(data.message || "Не удалось войти в админку.");
+        throw new Error(
+          data.error || data.message || "Не удалось войти в админку."
+        );
       }
 
       window.location.href = "/admin";
@@ -81,4 +86,18 @@ export function AdminLoginForm() {
       </div>
     </section>
   );
+}
+
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    throw new Error("Сервер вернул некорректный ответ.");
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Сервер вернул некорректный ответ.");
+  }
 }
