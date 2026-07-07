@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 
 type LegalSection = {
   title: string;
@@ -15,14 +16,7 @@ export function LegalPage({ title, lead, sections }: LegalPageProps) {
   return (
     <main className="min-h-screen bg-ink-950 px-4 py-6 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link className="text-sm font-semibold" href="/">
-            Contract Architect
-          </Link>
-          <Link className="text-sm font-semibold text-gold-300 hover:text-gold-400" href="/generator">
-            Создать документ
-          </Link>
-        </header>
+        <SiteHeader />
 
         <article className="mt-8 rounded-lg border border-legal-border bg-paper-50 p-6 text-graphite-950 shadow-paper sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-500">

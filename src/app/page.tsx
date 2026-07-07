@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/Button";
 
 const workflow = [
@@ -66,19 +67,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen overflow-hidden bg-ink-950 text-white">
       <section className="relative isolate min-h-[88svh] px-5 pb-16 pt-5 sm:px-8 lg:px-10">
-        <div className="mx-auto flex max-w-7xl items-center justify-between rounded-lg border border-white/10 bg-white/[0.035] px-4 py-3">
-          <Link className="text-sm font-semibold" href="/">
-            Contract Architect
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button asChild size="md" variant="ghost">
-              <Link href="/admin">Админка</Link>
-            </Button>
-            <Button asChild size="md" variant="secondary">
-              <Link href="/generator">Создать договор</Link>
-            </Button>
-          </div>
-        </div>
+        <SiteHeader />
 
         <div className="mx-auto grid min-h-[74svh] max-w-7xl items-center gap-10 py-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,0.98fr)]">
           <div className="max-w-3xl">

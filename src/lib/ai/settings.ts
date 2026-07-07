@@ -71,14 +71,11 @@ export function getPublicAiRuntimeStatus() {
   return {
     settings,
     hasApiKey: Boolean(process.env.OPENAI_API_KEY),
-    adminTokenConfigured: Boolean(process.env.ADMIN_ACCESS_TOKEN),
-    canWriteWithoutToken: canWriteWithoutToken(),
+    adminCredentialsConfigured: Boolean(
+      process.env.ADMIN_LOGIN && process.env.ADMIN_PASSWORD
+    ),
     isProduction: process.env.NODE_ENV === "production"
   };
-}
-
-export function canWriteWithoutToken() {
-  return process.env.NODE_ENV !== "production" && !process.env.ADMIN_ACCESS_TOKEN;
 }
 
 function getDefaultSettings(): AiRuntimeSettings {

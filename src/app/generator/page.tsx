@@ -1,26 +1,24 @@
 import { ContractForm } from "@/components/generator/ContractForm";
-import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getCurrentUserSession } from "@/lib/auth/currentUser";
+import { hasActiveSubscription } from "@/lib/billing/hasActiveSubscription";
 
-export default function GeneratorPage() {
+export const dynamic = "force-dynamic";
+
+export default async function GeneratorPage() {
+  const user = getCurrentUserSession();
+  const premiumActive = user
+    ? await hasActiveSubscription(user.userId)
+    : false;
+
   return (
     <main className="min-h-screen bg-ink-950 px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1500px]">
-        <header className="mb-7 flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link className="text-sm font-semibold text-white" href="/">
-            Contract Architect
-          </Link>
-          <div className="flex flex-wrap gap-2 text-xs text-steel-300">
-            <span className="rounded-full border border-white/10 px-3 py-1">
-              Шаблоны DOCX
-            </span>
-            <span className="rounded-full border border-white/10 px-3 py-1">
-              Экспорт ZIP
-            </span>
-            <span className="rounded-full border border-blue-300/25 px-3 py-1 text-blue-100">
-              AI-подсказки
-            </span>
-          </div>
-        </header>
+        <SiteHeader
+          ctaHref="/pricing"
+          ctaLabel="Premium"
+          subtitle="Шаблоны DOCX, экспорт ZIP, AI-проверка для premium"
+        />
 
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold-300">
@@ -35,7 +33,13 @@ export default function GeneratorPage() {
             документ автоматически.
           </p>
         </div>
-        <ContractForm />
+        <ContractForm
+          authState={{
+            email: user?.email,
+            hasActiveSubscription: premiumActive,
+            isAuthenticated: Boolean(user)
+          }}
+        />
       </div>
     </main>
   );

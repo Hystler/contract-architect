@@ -10,6 +10,8 @@ import {
   sanitizeContractInput
 } from "@/lib/ai/sanitizeContractInput";
 import { getAiRuntimeSettings } from "@/lib/ai/settings";
+import { getUserSessionFromRequest } from "@/lib/auth/currentUser";
+import { AuthConfigurationError } from "@/lib/auth/session";
 import { hasActiveSubscription } from "@/lib/billing/hasActiveSubscription";
 
 export const runtime = "nodejs";
@@ -79,6 +81,18 @@ export async function POST(request: Request) {
   }
 
   try {
+    const user = getUserSessionFromRequest(request);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Войдите в аккаунт, чтобы использовать AI-помощника."
+        },
+        { status: 401 }
+      );
+    }
+
     const payload = await request.json();
     const parsed = requestSchema.safeParse(payload);
 
@@ -104,14 +118,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = getUserId(request);
-    const hasSubscription = await hasActiveSubscription(userId);
+    const hasSubscription = await hasActiveSubscription(user.userId);
 
     if (!hasSubscription) {
       return NextResponse.json(
         {
           success: false,
-          error: "AI-помощник доступен только после оплаты подписки."
+          error:
+            "AI-помощник доступен только после оплаты или выдачи premium-доступа."
         },
         { status: 402 }
       );
@@ -127,7 +141,7 @@ export async function POST(request: Request) {
     });
     const estimatedInputTokens = estimateTokens(prompt);
     const monthlyLimit = getMonthlyTokenLimit();
-    const usageKey = `${userId || clientId}:${getCurrentPeriod()}`;
+    const usageKey = `${user.userId}:${getCurrentPeriod()}`;
 
     if (wouldExceedMonthlyLimit(usageKey, estimatedInputTokens, monthlyLimit)) {
       return NextResponse.json(
@@ -159,14 +173,18 @@ export async function POST(request: Request) {
       response.usage?.total_tokens ?? inputTokens + outputTokens;
 
     updateMonthlyUsage(usageKey, totalTokens);
-    await recordAggregateUsage(userId, {
+    await recordAggregateUsage(user.userId, {
       inputTokens,
       outputTokens,
       totalTokens
     });
 
     return NextResponse.json({ success: true, result });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthConfigurationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -183,10 +201,6 @@ function getClientId(request: Request) {
     request.headers.get("x-real-ip") ||
     "local"
   );
-}
-
-function getUserId(request: Request) {
-  return request.headers.get("x-user-id")?.trim() || null;
 }
 
 function isRateLimited(clientId: string) {

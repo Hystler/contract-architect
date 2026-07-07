@@ -18,6 +18,7 @@ type AiAssistantPanelProps = {
   fullText: string;
   hasActiveSubscription?: boolean;
   hasPersonalDataConsent?: boolean;
+  isAuthenticated?: boolean;
 };
 
 const quickActions: Array<{
@@ -57,7 +58,8 @@ export function AiAssistantPanel({
   defaultSelectedText = "",
   fullText,
   hasActiveSubscription = false,
-  hasPersonalDataConsent = false
+  hasPersonalDataConsent = false,
+  isAuthenticated = false
 }: AiAssistantPanelProps) {
   const [selectedText, setSelectedText] = useState(defaultSelectedText);
   const [userQuestion, setUserQuestion] = useState("");
@@ -76,8 +78,12 @@ export function AiAssistantPanel({
     [selectedText]
   );
 
+  if (!isAuthenticated) {
+    return <LockedAiPanel state="anonymous" />;
+  }
+
   if (!hasActiveSubscription) {
-    return <LockedAiPanel />;
+    return <LockedAiPanel state="no-premium" />;
   }
 
   async function askAssistant(action: AiAction) {
@@ -176,6 +182,15 @@ export function AiAssistantPanel({
         места. Это не юридическая консультация и не замена проверки специалистом.
       </p>
 
+      <Button
+        className="mt-5 w-full"
+        disabled={isLoading || !hasPersonalDataConsent}
+        onClick={() => askAssistant("risk_hints")}
+        size="lg"
+      >
+        {isLoading ? "Проверяем..." : "Проверить документ через AI"}
+      </Button>
+
       <div className="mt-5 grid gap-2">
         {quickActions.map((item) => (
           <button
@@ -261,16 +276,22 @@ export function AiAssistantPanel({
   );
 }
 
-function LockedAiPanel() {
+function LockedAiPanel({ state }: { state: "anonymous" | "no-premium" }) {
+  const isAnonymous = state === "anonymous";
+
   return (
     <section className="rounded-lg border border-blue-400/20 bg-graphite-900 p-5 text-white shadow-ai">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
         AI-помощник
       </p>
-      <h2 className="mt-2 text-xl font-semibold">Доступ после оплаты</h2>
+      <h2 className="mt-2 text-xl font-semibold">
+        {isAnonymous ? "Войдите в аккаунт" : "Доступ после premium"}
+      </h2>
       <p className="mt-4 text-sm leading-6 text-steel-200">
-        AI-проверка документов доступна только в подписке. Генерация DOCX, ZIP
-        и PDF-preview остаётся доступной без AI.
+        {isAnonymous
+          ? "Войдите в аккаунт, чтобы использовать AI-помощника."
+          : "AI-помощник доступен только с premium-доступом."}
+        {" "}Генерация DOCX, ZIP и PDF-preview остаётся доступной без AI.
       </p>
       <div className="mt-5 rounded-md border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-steel-300">
         AI сможет объяснять пункты, подсвечивать места для проверки, искать
@@ -278,7 +299,9 @@ function LockedAiPanel() {
         консультация.
       </div>
       <Button asChild className="mt-5 w-full" size="lg">
-        <Link href="/pricing">Оформить доступ</Link>
+        <Link href={isAnonymous ? "/login" : "/pricing"}>
+          {isAnonymous ? "Войти" : "Оформить доступ"}
+        </Link>
       </Button>
     </section>
   );

@@ -54,10 +54,12 @@ enum SubscriptionStatus {
 
 enum SubscriptionPlan {
   START
+  PREMIUM
 }
 
 enum BillingProvider {
   MOCK
+  MANUAL_ADMIN
   STRIPE
   YOOKASSA
 }
@@ -74,6 +76,7 @@ model User {
   id            String         @id @default(cuid())
   email         String         @unique
   name          String?
+  passwordHash  String?
   subscriptions Subscription[]
   aiUsage       AiUsage[]
   payments      Payment[]

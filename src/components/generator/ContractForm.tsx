@@ -29,7 +29,15 @@ import {
 } from "@/lib/validation/contractSchema";
 import type { ContractFormValues } from "@/types/contract";
 
-export function ContractForm() {
+type ContractFormProps = {
+  authState: {
+    email?: string;
+    hasActiveSubscription: boolean;
+    isAuthenticated: boolean;
+  };
+};
+
+export function ContractForm({ authState }: ContractFormProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -420,7 +428,8 @@ export function ContractForm() {
         <AiAssistantPanel
           defaultSelectedText={defaultAiText}
           fullText={assistantText}
-          hasActiveSubscription={false}
+          hasActiveSubscription={authState.hasActiveSubscription}
+          isAuthenticated={authState.isAuthenticated}
           hasPersonalDataConsent={Boolean(watchedValues.personalDataConsent)}
         />
       </aside>

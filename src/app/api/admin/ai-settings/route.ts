@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  canWriteWithoutToken,
   getPublicAiRuntimeStatus,
   updateAiRuntimeSettings
 } from "@/lib/ai/settings";
+import { requireAdminSession } from "@/lib/auth/adminGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +26,12 @@ const settingsSchema = z.object({
   customInstruction: z.string().trim().max(1200, "Инструкция слишком длинная")
 });
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { response } = requireAdminSession(request);
+  if (response) {
+    return response;
+  }
+
   return NextResponse.json(getPublicAiRuntimeStatus(), {
     headers: {
       "Cache-Control": "no-store"
@@ -35,14 +40,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!canWriteSettings(request)) {
-    return NextResponse.json(
-      {
-        message:
-          "Нет доступа к настройкам. Укажите корректный ADMIN_ACCESS_TOKEN."
-      },
-      { status: 403 }
-    );
+  const { response } = requireAdminSession(request);
+  if (response) {
+    return response;
   }
 
   try {
@@ -70,18 +70,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-function canWriteSettings(request: Request) {
-  const adminToken = process.env.ADMIN_ACCESS_TOKEN;
-
-  if (!adminToken) {
-    return canWriteWithoutToken();
-  }
-
-  const token =
-    request.headers.get("x-admin-token") ||
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-
-  return token === adminToken;
 }

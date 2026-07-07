@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { LegalFooter } from "@/components/legal/LegalPage";
 import { Button } from "@/components/ui/Button";
 
@@ -15,14 +16,7 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-ink-950 px-4 py-6 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link className="text-sm font-semibold" href="/">
-            Contract Architect
-          </Link>
-          <Button asChild variant="secondary">
-            <Link href="/generator">Создать документ</Link>
-          </Button>
-        </header>
+        <SiteHeader />
 
         <section className="grid gap-8 py-14 lg:grid-cols-[0.82fr_1fr] lg:items-center">
           <div>
