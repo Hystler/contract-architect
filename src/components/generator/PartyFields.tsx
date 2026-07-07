@@ -4,7 +4,7 @@ import type {
   FieldErrors,
   UseFormRegister
 } from "react-hook-form";
-import type { ContractFormValues } from "@/types/contract";
+import type { ContractFormValues, PartyType } from "@/types/contract";
 import { FieldError } from "@/components/ui/FieldError";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -14,6 +14,7 @@ type PartyPrefix = "customer" | "contractor";
 
 type PartyFieldsProps = {
   errors: FieldErrors<ContractFormValues>;
+  partyType: PartyType;
   prefix: PartyPrefix;
   register: UseFormRegister<ContractFormValues>;
   title: string;
@@ -36,13 +37,72 @@ const labels = {
   }
 } as const;
 
+const partyHints: Record<
+  PartyType,
+  {
+    typeLabel: string;
+    namePlaceholder: string;
+    representativePlaceholder: string;
+    representativeHint: string;
+    basisPlaceholder: string;
+    basisHint: string;
+    requisitesPlaceholder: string;
+    requisitesHint: string;
+  }
+> = {
+  physical: {
+    typeLabel: "Физлицо",
+    namePlaceholder: "Например, Иванов Иван Иванович",
+    representativePlaceholder: "Оставьте пустым, если сторона действует лично",
+    representativeHint:
+      "Для физлица представитель нужен только при доверенности или ином основании.",
+    basisPlaceholder: "Действует от своего имени",
+    basisHint:
+      "Если представитель не используется, можно указать: действует от своего имени.",
+    requisitesPlaceholder:
+      "ФИО, паспортные данные, адрес регистрации, телефон или e-mail",
+    requisitesHint:
+      "Для физлица обычно указывают паспортные данные и адрес регистрации."
+  },
+  ip: {
+    typeLabel: "ИП",
+    namePlaceholder: "Например, ИП Иванов Иван Иванович",
+    representativePlaceholder: "Например, Иванов Иван Иванович",
+    representativeHint:
+      "Если ИП подписывает сам, укажите ФИО предпринимателя или оставьте поле пустым.",
+    basisPlaceholder: "на основании записи ЕГРИП / ОГРНИП",
+    basisHint:
+      "Для ИП часто указывают запись в ЕГРИП, ОГРНИП или свидетельство о регистрации.",
+    requisitesPlaceholder:
+      "ИНН, ОГРНИП, адрес регистрации, банковские реквизиты",
+    requisitesHint:
+      "Для ИП обычно нужны ИНН, ОГРНИП, адрес и платежные реквизиты."
+  },
+  ooo: {
+    typeLabel: "Юрлицо / ООО",
+    namePlaceholder: "Например, ООО «Альфа Проект»",
+    representativePlaceholder: "Например, Петров Петр Петрович",
+    representativeHint:
+      "Укажите руководителя или представителя, который подписывает договор.",
+    basisPlaceholder: "на основании Устава",
+    basisHint:
+      "Для ООО обычно указывают Устав, доверенность или решение о назначении.",
+    requisitesPlaceholder:
+      "ИНН, ОГРН, юридический адрес, банк, БИК, р/с, к/с",
+    requisitesHint:
+      "Для юрлица укажите регистрационные данные, адрес и банковские реквизиты."
+  }
+};
+
 export function PartyFields({
   errors,
+  partyType,
   prefix,
   register,
   title
 }: PartyFieldsProps) {
   const fieldLabels = labels[prefix];
+  const hints = partyHints[partyType];
   const typeName = `${prefix}Type` as const;
   const nameName = `${prefix}Name` as const;
   const representativeName = `${prefix}Representative` as const;
@@ -58,9 +118,9 @@ export function PartyFields({
             {fieldLabels.type}
           </span>
           <Select isInvalid={Boolean(errors[typeName])} {...register(typeName)}>
-            <option value="physical">Физлицо</option>
+            <option value="physical">{partyHints.physical.typeLabel}</option>
             <option value="ip">ИП</option>
-            <option value="ooo">ООО</option>
+            <option value="ooo">{partyHints.ooo.typeLabel}</option>
           </Select>
           <FieldError message={errors[typeName]?.message} />
         </label>
@@ -71,7 +131,7 @@ export function PartyFields({
           </span>
           <Input
             isInvalid={Boolean(errors[nameName])}
-            placeholder="Например, ООО «Вектор»"
+            placeholder={hints.namePlaceholder}
             {...register(nameName)}
           />
           <FieldError message={errors[nameName]?.message} />
@@ -82,9 +142,12 @@ export function PartyFields({
             {fieldLabels.representative}
           </span>
           <Input
-            placeholder="Например, Иванов Иван Иванович"
+            placeholder={hints.representativePlaceholder}
             {...register(representativeName)}
           />
+          <p className="mt-2 text-xs leading-5 text-muted-500">
+            {hints.representativeHint}
+          </p>
           <FieldError message={errors[representativeName]?.message} />
         </label>
 
@@ -93,9 +156,12 @@ export function PartyFields({
             {fieldLabels.basis}
           </span>
           <Input
-            placeholder="Например, на основании Устава"
+            placeholder={hints.basisPlaceholder}
             {...register(basisName)}
           />
+          <p className="mt-2 text-xs leading-5 text-muted-500">
+            {hints.basisHint}
+          </p>
           <FieldError message={errors[basisName]?.message} />
         </label>
 
@@ -106,9 +172,12 @@ export function PartyFields({
           <Textarea
             className="min-h-32"
             isInvalid={Boolean(errors[requisitesName])}
-            placeholder="ИНН, ОГРН, адрес, банковские реквизиты"
+            placeholder={hints.requisitesPlaceholder}
             {...register(requisitesName)}
           />
+          <p className="mt-2 text-xs leading-5 text-muted-500">
+            {hints.requisitesHint}
+          </p>
           <FieldError message={errors[requisitesName]?.message} />
         </label>
       </div>

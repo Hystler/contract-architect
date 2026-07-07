@@ -85,7 +85,7 @@ function getDefaultSettings(): AiRuntimeSettings {
   return {
     enabled: process.env.AI_ENABLED !== "false",
     provider: "openai",
-    model: normalizeModel(process.env.OPENAI_MODEL) || "gpt-4.1-mini",
+    model: normalizeModel(process.env.OPENAI_MODEL) || "gpt-5.4-mini",
     maxRequestsPerWindow: normalizeInteger(
       process.env.AI_MAX_REQUESTS_PER_WINDOW,
       8,

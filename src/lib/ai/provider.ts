@@ -14,11 +14,13 @@ export type AiAssistantInput = {
   userQuestion?: string;
 };
 
-type OpenAiChatResponse = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
+type OpenAiResponsesResponse = {
+  output_text?: string;
+  output?: Array<{
+    content?: Array<{
+      text?: string;
+      type?: string;
+    }>;
   }>;
 };
 
@@ -57,12 +59,12 @@ export async function runContractAssistant(input: AiAssistantInput) {
     );
   }
 
-  const model = settings.model || process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const model = settings.model || process.env.OPENAI_MODEL || "gpt-5.4-mini";
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -70,17 +72,9 @@ export async function runContractAssistant(input: AiAssistantInput) {
       },
       body: JSON.stringify({
         model,
-        temperature: 0.2,
-        messages: [
-          {
-            role: "system",
-            content: buildSystemPrompt(settings.customInstruction)
-          },
-          {
-            role: "user",
-            content: buildUserPrompt(input)
-          }
-        ]
+        instructions: buildSystemPrompt(settings.customInstruction),
+        input: buildUserPrompt(input),
+        max_output_tokens: 900
       }),
       signal: controller.signal
     });
@@ -91,8 +85,8 @@ export async function runContractAssistant(input: AiAssistantInput) {
       );
     }
 
-    const json = (await response.json()) as OpenAiChatResponse;
-    const result = json.choices?.[0]?.message?.content?.trim();
+    const json = (await response.json()) as OpenAiResponsesResponse;
+    const result = extractResponseText(json);
 
     if (!result) {
       throw new AiProviderError(
@@ -118,6 +112,20 @@ export async function runContractAssistant(input: AiAssistantInput) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function extractResponseText(json: OpenAiResponsesResponse) {
+  const directText = json.output_text?.trim();
+  if (directText) {
+    return directText;
+  }
+
+  return json.output
+    ?.flatMap((item) => item.content || [])
+    .map((content) => content.text?.trim() || "")
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
 }
 
 function buildSystemPrompt(customInstruction: string) {

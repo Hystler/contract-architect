@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { contractKindValues } from "@/lib/contracts/contractOptions";
 
 const requiredMessage = "Заполните поле";
 
@@ -46,6 +47,11 @@ const partyTypeSchema = z.enum(["physical", "ip", "ooo"], {
   invalid_type_error: "Выберите тип стороны"
 });
 
+const contractKindSchema = z.enum(contractKindValues, {
+  required_error: "Выберите тип договора",
+  invalid_type_error: "Выберите тип договора"
+});
+
 export const contractFormSchema = z
   .object({
     contractNumber: textField("Номер договора"),
@@ -72,6 +78,7 @@ export const contractFormSchema = z
       "Реквизиты исполнителя слишком длинные"
     ),
 
+    contractKind: contractKindSchema.default("services"),
     subject: textField("Предмет договора").max(
       1000,
       "Предмет договора слишком длинный"
@@ -162,9 +169,11 @@ export const defaultContractValues = {
   contractorRepresentative: "",
   contractorBasis: "",
   contractorRequisites: "",
-  subject: "",
-  worksDescription: "",
-  works: [{ name: "" }],
+  contractKind: "services",
+  subject: "оказание услуг",
+  worksDescription:
+    "Исполнитель оказывает услуги, описанные в перечне работ, и передает результат Заказчику.",
+  works: [{ name: "Оказание согласованных услуг" }],
   totalAmount: 100000,
   prepaymentPercent: 50,
   prepaymentAmount: 50000,

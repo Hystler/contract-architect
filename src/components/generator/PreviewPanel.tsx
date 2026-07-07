@@ -3,6 +3,7 @@
 import type { ContractFormValues } from "@/types/contract";
 import { Card } from "@/components/ui/Card";
 import { formatMoney } from "@/lib/documents/formatMoney";
+import { getContractKindOption } from "@/lib/contracts/contractOptions";
 
 type PreviewPanelProps = {
   values: ContractFormValues;
@@ -10,6 +11,7 @@ type PreviewPanelProps = {
 
 export function PreviewPanel({ values }: PreviewPanelProps) {
   const worksCount = values.works?.filter((work) => work.name?.trim()).length ?? 0;
+  const contractKind = getContractKindOption(values.contractKind);
 
   return (
     <Card className="p-5">
@@ -22,6 +24,7 @@ export function PreviewPanel({ values }: PreviewPanelProps) {
 
       <div className="mt-5 space-y-4 text-sm">
         <SummaryRow label="Город" value={values.city || "не указан"} />
+        <SummaryRow label="Тип договора" value={contractKind.label} />
         <SummaryRow
           label="Заказчик"
           value={values.customerName || "не указан"}

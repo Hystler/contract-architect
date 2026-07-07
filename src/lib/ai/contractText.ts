@@ -1,5 +1,6 @@
 import type { ContractFormValues, TemplateData } from "@/types/contract";
 import { formatMoney } from "@/lib/documents/formatMoney";
+import { getContractKindOption } from "@/lib/contracts/contractOptions";
 
 const partyTypeLabels = {
   physical: "Физлицо",
@@ -8,12 +9,14 @@ const partyTypeLabels = {
 } as const;
 
 export function buildContractTextFromValues(values: ContractFormValues) {
+  const contractKind = getContractKindOption(values.contractKind);
   const works = values.works
     ?.map((work, index) => `${index + 1}. ${work.name}`)
     .join("\n");
 
   return [
     `Договор № ${values.contractNumber || "не указан"} от ${values.contractDate || "дата не указана"}`,
+    `Тип договора: ${contractKind.label}`,
     `Город: ${values.city || "не указан"}`,
     `Заказчик: ${partyTypeLabels[values.customerType]} ${values.customerName || "не указан"}`,
     `Исполнитель: ${partyTypeLabels[values.contractorType]} ${values.contractorName || "не указан"}`,

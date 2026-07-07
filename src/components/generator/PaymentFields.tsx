@@ -7,6 +7,7 @@ import type {
 } from "react-hook-form";
 import type { ContractFormValues } from "@/types/contract";
 import { Button } from "@/components/ui/Button";
+import { CalendarInput } from "@/components/ui/CalendarInput";
 import { FieldError } from "@/components/ui/FieldError";
 import { Input } from "@/components/ui/Input";
 
@@ -34,6 +35,16 @@ export function PaymentFields({
       shouldValidate: true
     });
     setValue("finalPaymentAmount", finalPaymentAmount, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+  }
+
+  function updateDateField(
+    field: "prepaymentDate" | "finalPaymentDate",
+    value: string
+  ) {
+    setValue(field, value, {
       shouldDirty: true,
       shouldValidate: true
     });
@@ -112,10 +123,12 @@ export function PaymentFields({
           <span className="mb-2 block text-sm font-medium text-muted-500">
             Дата предоплаты
           </span>
-          <Input
+          <input type="hidden" {...register("prepaymentDate")} />
+          <CalendarInput
             isInvalid={Boolean(errors.prepaymentDate)}
-            type="date"
-            {...register("prepaymentDate")}
+            onChange={(value) => updateDateField("prepaymentDate", value)}
+            placeholder="Не указана"
+            value={values.prepaymentDate}
           />
           <FieldError message={errors.prepaymentDate?.message} />
         </label>
@@ -124,10 +137,12 @@ export function PaymentFields({
           <span className="mb-2 block text-sm font-medium text-muted-500">
             Дата финального платежа
           </span>
-          <Input
+          <input type="hidden" {...register("finalPaymentDate")} />
+          <CalendarInput
             isInvalid={Boolean(errors.finalPaymentDate)}
-            type="date"
-            {...register("finalPaymentDate")}
+            onChange={(value) => updateDateField("finalPaymentDate", value)}
+            placeholder="Не указана"
+            value={values.finalPaymentDate}
           />
           <FieldError message={errors.finalPaymentDate?.message} />
         </label>

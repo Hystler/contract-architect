@@ -58,7 +58,7 @@ AI_MAX_REQUESTS_PER_WINDOW="8"
 AI_RATE_LIMIT_WINDOW_SECONDS="300"
 AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
-OPENAI_MODEL="gpt-4.1-mini"
+OPENAI_MODEL="gpt-5.4-mini"
 ```
 
 Для работы сохранения черновиков укажите PostgreSQL/Supabase URL.
@@ -92,7 +92,7 @@ AI_MAX_REQUESTS_PER_WINDOW="8"
 AI_RATE_LIMIT_WINDOW_SECONDS="300"
 AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
-OPENAI_MODEL="gpt-4.1-mini"
+OPENAI_MODEL="gpt-5.4-mini"
 ```
 
 Назначение переменных:
@@ -111,7 +111,7 @@ OPENAI_MODEL="gpt-4.1-mini"
 - `AI_RATE_LIMIT_WINDOW_SECONDS` — длина окна лимита в секундах.
 - `AI_CUSTOM_INSTRUCTION` — дополнительная server-side инструкция AI.
 - `OPENAI_API_KEY` — серверный ключ OpenAI. Не должен попадать на клиент.
-- `OPENAI_MODEL` — модель для AI-помощника, по умолчанию `gpt-4.1-mini`.
+- `OPENAI_MODEL` — модель для AI-помощника, по умолчанию `gpt-5.4-mini`.
 
 `.env` и `.env.local` не должны попадать в Git.
 
@@ -195,7 +195,7 @@ AI_MAX_REQUESTS_PER_WINDOW="8"
 AI_RATE_LIMIT_WINDOW_SECONDS="300"
 AI_CUSTOM_INSTRUCTION=""
 OPENAI_API_KEY=""
-OPENAI_MODEL="gpt-4.1-mini"
+OPENAI_MODEL="gpt-5.4-mini"
 ```
 
 Для деплоя только основного генератора `DATABASE_URL` и `DIRECT_URL` можно
@@ -359,8 +359,9 @@ Payload:
 }
 ```
 
-Ключ OpenAI используется только на сервере. Route ограничивает размер текста,
-имеет простой rate limit и возвращает русские ошибки без внутренних деталей.
+Ключ OpenAI используется только на сервере. Route обращается к OpenAI Responses
+API, ограничивает размер текста, имеет простой rate limit и возвращает русские
+ошибки без внутренних деталей.
 
 ## Админка
 

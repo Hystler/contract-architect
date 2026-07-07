@@ -11,10 +11,17 @@ import { PaymentFields } from "@/components/generator/PaymentFields";
 import { PreviewPanel } from "@/components/generator/PreviewPanel";
 import { TemplateSelector } from "@/components/generator/TemplateSelector";
 import { WorksListField } from "@/components/generator/WorksListField";
+import { CalendarInput } from "@/components/ui/CalendarInput";
 import { FieldError } from "@/components/ui/FieldError";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { buildContractTextFromValues } from "@/lib/ai/contractText";
+import {
+  contractKindOptions,
+  getContractKindOption,
+  type ContractKind
+} from "@/lib/contracts/contractOptions";
 import {
   contractFormSchema,
   defaultContractValues
@@ -127,6 +134,56 @@ export function ContractForm() {
     })();
   }
 
+  function updateDateField(
+    field:
+      | "contractDate"
+      | "actDate"
+      | "startDate"
+      | "endDate",
+    value: string
+  ) {
+    setValue(field, value, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+  }
+
+  function selectContractKind(value: ContractKind) {
+    const nextOption = getContractKindOption(value);
+    const currentOption = getContractKindOption(watchedValues.contractKind);
+
+    setValue("contractKind", value, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+
+    if (shouldReplacePreset(watchedValues.subject, "subject")) {
+      setValue("subject", nextOption.subject, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    }
+
+    if (shouldReplacePreset(watchedValues.worksDescription, "worksDescription")) {
+      setValue("worksDescription", nextOption.worksDescription, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    }
+
+    const firstWork = watchedValues.works?.[0]?.name || "";
+    if (
+      nextOption.firstWork &&
+      watchedValues.works?.length &&
+      (firstWork.trim() === "" || firstWork === currentOption.firstWork)
+    ) {
+      setValue("works.0.name", nextOption.firstWork, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    }
+  }
+
   return (
     <form
       className="grid gap-6 xl:grid-cols-[230px_minmax(0,1fr)_380px]"
@@ -156,10 +213,11 @@ export function ContractForm() {
               <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата договора
               </span>
-              <Input
+              <input type="hidden" {...register("contractDate")} />
+              <CalendarInput
                 isInvalid={Boolean(errors.contractDate)}
-                type="date"
-                {...register("contractDate")}
+                onChange={(value) => updateDateField("contractDate", value)}
+                value={watchedValues.contractDate}
               />
               <FieldError message={errors.contractDate?.message} />
             </label>
@@ -190,10 +248,11 @@ export function ContractForm() {
               <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата акта
               </span>
-              <Input
+              <input type="hidden" {...register("actDate")} />
+              <CalendarInput
                 isInvalid={Boolean(errors.actDate)}
-                type="date"
-                {...register("actDate")}
+                onChange={(value) => updateDateField("actDate", value)}
+                value={watchedValues.actDate}
               />
               <FieldError message={errors.actDate?.message} />
             </label>
@@ -202,6 +261,7 @@ export function ContractForm() {
 
         <PartyFields
           errors={errors}
+          partyType={watchedValues.customerType}
           prefix="customer"
           register={register}
           title="Заказчик"
@@ -209,6 +269,7 @@ export function ContractForm() {
 
         <PartyFields
           errors={errors}
+          partyType={watchedValues.contractorType}
           prefix="contractor"
           register={register}
           title="Исполнитель"
@@ -217,6 +278,31 @@ export function ContractForm() {
         <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
           <h2 className="text-xl font-semibold">Предмет договора</h2>
           <div className="mt-5 space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-muted-500">
+                Тип договора
+              </span>
+              <input type="hidden" {...register("contractKind")} />
+              <Select
+                isInvalid={Boolean(errors.contractKind)}
+                onChange={(event) =>
+                  selectContractKind(event.target.value as ContractKind)
+                }
+                value={watchedValues.contractKind}
+              >
+                {contractKindOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <p className="mt-2 text-sm leading-5 text-muted-500">
+                Выберите базовый сценарий. DOCX-шаблон остаётся тем же, но
+                подсказки и предмет договора подстроятся под выбранный тип.
+              </p>
+              <FieldError message={errors.contractKind?.message} />
+            </label>
+
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-muted-500">
                 Предмет договора
@@ -264,10 +350,12 @@ export function ContractForm() {
               <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата начала работ
               </span>
-              <Input
+              <input type="hidden" {...register("startDate")} />
+              <CalendarInput
                 isInvalid={Boolean(errors.startDate)}
-                type="date"
-                {...register("startDate")}
+                onChange={(value) => updateDateField("startDate", value)}
+                placeholder="Не указана"
+                value={watchedValues.startDate}
               />
               <FieldError message={errors.startDate?.message} />
             </label>
@@ -276,10 +364,12 @@ export function ContractForm() {
               <span className="mb-2 block text-sm font-medium text-muted-500">
                 Дата окончания работ
               </span>
-              <Input
+              <input type="hidden" {...register("endDate")} />
+              <CalendarInput
                 isInvalid={Boolean(errors.endDate)}
-                type="date"
-                {...register("endDate")}
+                onChange={(value) => updateDateField("endDate", value)}
+                placeholder="Не указана"
+                value={watchedValues.endDate}
               />
               <FieldError message={errors.endDate?.message} />
             </label>
@@ -311,9 +401,22 @@ export function ContractForm() {
   );
 }
 
+function shouldReplacePreset(
+  currentValue: string | undefined,
+  key: "subject" | "worksDescription"
+) {
+  const value = currentValue?.trim() || "";
+
+  if (!value) {
+    return true;
+  }
+
+  return contractKindOptions.some((option) => option[key] === value);
+}
+
 function BuilderSteps() {
   const steps = [
-    "Выбор шаблона",
+    "Шаблон и тип договора",
     "Данные сторон",
     "Предмет и работы",
     "Финансы и сроки",
