@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { contractKindValues } from "@/lib/contracts/contractOptions";
+import { defaultContractTemplateId } from "@/lib/templates/templateCatalog";
 
 const requiredMessage = "Заполните поле";
 
@@ -54,6 +55,7 @@ const contractKindSchema = z.enum(contractKindValues, {
 
 export const contractFormSchema = z
   .object({
+    templateId: z.string().trim().max(120).optional().default(defaultContractTemplateId),
     contractNumber: textField("Номер договора"),
     contractDate: dateField("Дата договора"),
     city: textField("Город"),
@@ -162,6 +164,7 @@ function roundMoney(value: number) {
 }
 
 export const defaultContractValues = {
+  templateId: defaultContractTemplateId,
   contractNumber: "1",
   contractDate: new Date().toISOString().slice(0, 10),
   city: "Москва",

@@ -4,12 +4,14 @@ import type { ContractFormValues } from "@/types/contract";
 import { Card } from "@/components/ui/Card";
 import { formatMoney } from "@/lib/documents/formatMoney";
 import { getContractKindOption } from "@/lib/contracts/contractOptions";
+import type { TemplateSummary } from "@/lib/templates/templateCatalog";
 
 type PreviewPanelProps = {
+  selectedTemplate?: TemplateSummary | null;
   values: ContractFormValues;
 };
 
-export function PreviewPanel({ values }: PreviewPanelProps) {
+export function PreviewPanel({ selectedTemplate, values }: PreviewPanelProps) {
   const worksCount = values.works?.filter((work) => work.name?.trim()).length ?? 0;
   const contractKind = getContractKindOption(values.contractKind);
 
@@ -23,6 +25,10 @@ export function PreviewPanel({ values }: PreviewPanelProps) {
       </h2>
 
       <div className="mt-5 space-y-4 text-sm">
+        <SummaryRow
+          label="Шаблон"
+          value={selectedTemplate?.name || "Договор оказания услуг + акт"}
+        />
         <SummaryRow label="Город" value={values.city || "не указан"} />
         <SummaryRow label="Тип договора" value={contractKind.label} />
         <SummaryRow

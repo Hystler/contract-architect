@@ -26,6 +26,9 @@ export function SiteHeader({
         ) : null}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Button asChild size="md" variant="ghost">
+          <Link href="/templates">Шаблоны</Link>
+        </Button>
         {user ? (
           <>
             <span className="max-w-[220px] truncate text-sm text-steel-300">

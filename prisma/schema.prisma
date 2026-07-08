@@ -80,6 +80,7 @@ model User {
   subscriptions Subscription[]
   aiUsage       AiUsage[]
   payments      Payment[]
+  templates     DocumentTemplate[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -189,16 +190,26 @@ model Party {
 }
 
 model DocumentTemplate {
-  id        String               @id @default(cuid())
-  type      DocumentTemplateType
-  name      String
-  filePath  String
-  variables Json
-  isActive  Boolean              @default(true)
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  id             String               @id @default(cuid())
+  type           DocumentTemplateType
+  category       String               @default("Услуги")
+  name           String
+  description    String               @default("") @db.Text
+  filePath       String?
+  storageKey     String?
+  contentBase64  String?              @db.Text
+  variables      Json
+  isActive       Boolean              @default(true)
+  isPremium      Boolean              @default(false)
+  isUserUploaded Boolean              @default(false)
+  ownerUserId    String?
+  owner          User?                @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
   @@index([type, isActive])
+  @@index([category, isActive])
+  @@index([ownerUserId, isUserUploaded])
 }
 
 model GeneratedDocument {

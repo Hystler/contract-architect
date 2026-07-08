@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AiAssistantPanel } from "@/components/ai/AiAssistantPanel";
 import { GenerateActions } from "@/components/generator/GenerateActions";
@@ -28,6 +28,7 @@ import {
   defaultContractValues
 } from "@/lib/validation/contractSchema";
 import type { ContractFormValues } from "@/types/contract";
+import type { TemplateSummary } from "@/lib/templates/templateCatalog";
 
 type ContractFormProps = {
   authState: {
@@ -39,9 +40,11 @@ type ContractFormProps = {
 
 export function ContractForm({ authState }: ContractFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateSummary | null>(null);
 
   const {
     control,
@@ -64,6 +67,28 @@ export function ContractForm({ authState }: ContractFormProps) {
   );
   const defaultAiText =
     watchedValues.worksDescription || watchedValues.subject || "";
+
+  useEffect(() => {
+    const templateId = searchParams.get("templateId");
+
+    if (templateId) {
+      setValue("templateId", templateId, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    }
+  }, [searchParams, setValue]);
+
+  const selectTemplate = useCallback(
+    (template: TemplateSummary) => {
+      setSelectedTemplate(template);
+      setValue("templateId", template.id, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    },
+    [setValue]
+  );
 
   async function generateZip(data: ContractFormValues) {
     setIsGenerating(true);
@@ -205,7 +230,12 @@ export function ContractForm({ authState }: ContractFormProps) {
       <BuilderSteps />
 
       <div className="order-1 space-y-6 xl:order-none">
-        <TemplateSelector />
+        <input type="hidden" {...register("templateId")} />
+        <TemplateSelector
+          hasActiveSubscription={authState.hasActiveSubscription}
+          onSelect={selectTemplate}
+          value={watchedValues.templateId}
+        />
 
         <section className="rounded-lg border border-legal-border bg-paper-50 p-5 text-graphite-950 shadow-paper">
           <h2 className="text-xl font-semibold">Основные данные</h2>
@@ -428,8 +458,9 @@ export function ContractForm({ authState }: ContractFormProps) {
       </div>
 
       <aside className="order-3 space-y-6 xl:sticky xl:top-6 xl:order-none xl:self-start">
-        <PreviewPanel values={watchedValues} />
+        <PreviewPanel selectedTemplate={selectedTemplate} values={watchedValues} />
         <AiAssistantPanel
+          contractType={selectedTemplate?.name}
           defaultSelectedText={defaultAiText}
           fullText={assistantText}
           hasActiveSubscription={authState.hasActiveSubscription}
