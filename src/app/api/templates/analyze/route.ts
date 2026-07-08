@@ -8,6 +8,11 @@ import { detectTemplateVariables } from "@/lib/templates/templateVariableDetecto
 import { extractDocxText } from "@/lib/templates/extractDocxText";
 import { getUserSessionFromRequest } from "@/lib/auth/currentUser";
 import { hasActiveSubscription } from "@/lib/billing/hasActiveSubscription";
+import { getOpenAIModel, OpenAIConfigurationError } from "@/lib/ai/openai";
+import {
+  isOpenAIModelUnavailableError,
+  logSafeAiError
+} from "@/lib/ai/openaiErrorHandling";
 import { runPrisma } from "@/lib/prisma";
 import { normalizeTemplateVariables } from "@/lib/templates/templateCatalog";
 
@@ -35,6 +40,8 @@ const metadataSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const modelForLog = getOpenAIModel();
+
   try {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
@@ -152,7 +159,28 @@ export async function POST(request: Request) {
       analysis: withSafetyWarnings(analysis),
       template
     });
-  } catch {
+  } catch (error) {
+    logSafeAiError(error, {
+      model: modelForLog,
+      route: "/api/templates/analyze"
+    });
+
+    if (error instanceof OpenAIConfigurationError) {
+      return NextResponse.json(
+        { error: "AI-анализ не настроен. Проверьте OPENAI_API_KEY в Vercel." },
+        { status: 503 }
+      );
+    }
+
+    if (isOpenAIModelUnavailableError(error)) {
+      return NextResponse.json(
+        {
+          error: "Модель AI недоступна. Проверьте OPENAI_MODEL в настройках Vercel."
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "AI-анализ шаблона временно недоступен. Попробуйте позже." },
       { status: 503 }

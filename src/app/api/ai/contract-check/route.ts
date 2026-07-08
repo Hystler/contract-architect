@@ -4,7 +4,15 @@ import {
   buildContractAssistantPrompt,
   contractAssistantSystemPrompt
 } from "@/lib/ai/contractAssistantPrompt";
-import { getOpenAIClient, getOpenAIModel } from "@/lib/ai/openai";
+import {
+  getOpenAIClient,
+  getOpenAIModel,
+  OpenAIConfigurationError
+} from "@/lib/ai/openai";
+import {
+  isOpenAIModelUnavailableError,
+  logSafeAiError
+} from "@/lib/ai/openaiErrorHandling";
 import {
   estimateTokens,
   sanitizeContractInput
@@ -74,6 +82,7 @@ const monthlyBuckets = new Map<string, { totalTokens: number; requestCount: numb
 
 export async function POST(request: Request) {
   const clientId = getClientId(request);
+  let modelForLog = getOpenAIModel();
 
   if (isRateLimited(clientId)) {
     return NextResponse.json(
@@ -126,6 +135,7 @@ export async function POST(request: Request) {
     }
 
     const aiSettings = getAiRuntimeSettings();
+    modelForLog = aiSettings.model || getOpenAIModel();
     if (!aiSettings.enabled) {
       return NextResponse.json(
         {
@@ -174,7 +184,7 @@ export async function POST(request: Request) {
 
     const client = getOpenAIClient();
     const response = await client.responses.create({
-      model: aiSettings.model || getOpenAIModel(),
+      model: modelForLog,
       instructions: contractAssistantSystemPrompt,
       input: prompt,
       max_output_tokens: 900
@@ -213,6 +223,31 @@ export async function POST(request: Request) {
     if (isDatabaseUnavailableError(error)) {
       return NextResponse.json(
         { success: false, error: databaseUnavailableMessage },
+        { status: 503 }
+      );
+    }
+
+    logSafeAiError(error, {
+      model: modelForLog,
+      route: "/api/ai/contract-check"
+    });
+
+    if (error instanceof OpenAIConfigurationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "AI-помощник не настроен. Проверьте OPENAI_API_KEY в Vercel."
+        },
+        { status: 503 }
+      );
+    }
+
+    if (isOpenAIModelUnavailableError(error)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Модель AI недоступна. Проверьте OPENAI_MODEL в настройках Vercel."
+        },
         { status: 503 }
       );
     }
@@ -327,8 +362,10 @@ async function recordAggregateUsage(
         }
       })
     );
-  } catch {
-    // Не раскрываем и не логируем детали: usage является вспомогательной метрикой.
+  } catch (error) {
+    logSafeAiError(error, {
+      route: "/api/ai/contract-check:usage"
+    });
   }
 }
 

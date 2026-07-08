@@ -35,7 +35,12 @@ export async function analyzeTemplateWithAI(input: {
     model: process.env.OPENAI_MODEL?.trim() || getOpenAIModel(),
     instructions: templateAnalyzerSystemPrompt,
     input: prompt,
-    max_output_tokens: 1400
+    max_output_tokens: 1400,
+    text: {
+      format: {
+        type: "json_object"
+      }
+    }
   });
 
   const raw = response.output_text?.trim();
@@ -44,7 +49,14 @@ export async function analyzeTemplateWithAI(input: {
     throw new Error("Empty template analysis");
   }
 
-  return normalizeTemplateAnalysis(JSON.parse(extractJson(raw)), input.detectedVariables);
+  try {
+    return normalizeTemplateAnalysis(
+      JSON.parse(extractJson(raw)),
+      input.detectedVariables
+    );
+  } catch {
+    return buildFallbackTemplateAnalysis(input.detectedVariables);
+  }
 }
 
 function buildTemplateAnalysisPrompt(input: {
@@ -131,4 +143,31 @@ function normalizeStringArray(value: unknown) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function buildFallbackTemplateAnalysis(
+  detectedVariables: TemplateVariable[]
+): TemplateAnalysis {
+  const variables = detectedVariables.length > 0 ? detectedVariables : [];
+
+  return {
+    documentType: "Загруженный DOCX-шаблон",
+    parties: ["Заказчик", "Исполнитель"],
+    variables,
+    formFields: variables,
+    warnings: [
+      "AI вернул ответ в нестандартном формате, поэтому форма собрана по найденным переменным шаблона.",
+      "Проверьте шаблон со специалистом перед использованием."
+    ],
+    lawyerQuestions: [
+      "Какие условия договора должны быть обязательными для этого типа сделки?",
+      "Какие реквизиты и приложения нужно проверить перед подписанием?"
+    ],
+    legalReviewItems: [
+      "Предмет договора",
+      "Сроки выполнения",
+      "Порядок оплаты",
+      "Реквизиты сторон"
+    ]
+  };
 }

@@ -134,11 +134,7 @@ export function AiAssistantPanel({
         })
       });
 
-      const data = (await response.json()) as {
-        success: boolean;
-        result?: string;
-        error?: string;
-      };
+      const data = await readAiResponse(response);
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || "AI-помощник не смог обработать запрос.");
@@ -274,6 +270,30 @@ export function AiAssistantPanel({
       </div>
     </section>
   );
+}
+
+async function readAiResponse(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    return {
+      success: false,
+      error: "Сервер AI вернул пустой ответ."
+    };
+  }
+
+  try {
+    return JSON.parse(text) as {
+      success: boolean;
+      result?: string;
+      error?: string;
+    };
+  } catch {
+    return {
+      success: false,
+      error: "Сервер AI вернул некорректный ответ."
+    };
+  }
 }
 
 function LockedAiPanel({ state }: { state: "anonymous" | "no-premium" }) {
